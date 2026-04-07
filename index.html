@@ -2,43 +2,222 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CISCO_CORE_V27</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SNEAK_SENSE_2027</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Orbitron:wght@900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --accent: #ff2d55;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Анимированный фон "Нейросеть" */
+        .neural-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #1a0505 0%, #000 100%);
+            z-index: -2;
+        }
+
+        /* Хедер */
+        header {
+            padding: 60px 25px 20px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+        }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; letter-spacing: -1px; }
+        .logo span { color: var(--accent); }
+
+        /* Контейнер поиска - Нюанс: Удобно под большой палец */
+        .search-container {
+            padding: 0 20px 20px;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .search-bar {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 18px 24px;
+            display: flex; align-items: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        input {
+            background: transparent; border: none; color: #fff;
+            font-size: 1rem; width: 100%; outline: none; font-weight: 500;
+        }
+        .ai-icon { width: 24px; height: 24px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent); margin-left: 10px; }
+
+        /* Сетка кроссовок */
+        #feed {
+            padding: 10px 20px 120px;
+            display: grid; grid-template-columns: 1fr; gap: 25px;
+        }
+
+        .kick-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 35px;
+            padding: 15px;
+            position: relative;
+            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        .img-container {
+            width: 100%; height: 320px;
+            background: radial-gradient(circle, rgba(255,45,85,0.1) 0%, transparent 70%);
+            border-radius: 25px;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+        .kick-card img {
+            max-width: 90%; height: auto;
+            filter: drop-shadow(0 30px 50px rgba(0,0,0,0.8));
+            transition: 0.5s transform ease;
+        }
+
+        .kick-info { padding: 20px 10px 10px; }
+        .kick-name { font-weight: 800; font-size: 1.4rem; margin-bottom: 5px; text-transform: uppercase; }
+        .kick-meta { display: flex; justify-content: space-between; align-items: center; color: #888; font-size: 0.8rem; }
+        .price { color: var(--accent); font-weight: 900; font-size: 1.1rem; }
+
+        /* Индикатор загрузки ИИ */
+        #scanner-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 200;
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        .scan-line {
+            width: 80%; height: 2px; background: var(--accent);
+            box-shadow: 0 0 20px var(--accent);
+            animation: scan 1.5s infinite linear;
+        }
+        @keyframes scan { 0% { transform: translateY(-100px); } 100% { transform: translateY(100px); } }
+
+        /* Нижнее меню - Нюанс: Максимальное удобство */
+        nav {
+            position: fixed; bottom: calc(20px + var(--safe-bottom));
+            left: 20px; right: 20px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            height: 70px;
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 1000;
+        }
+        .nav-icon { font-size: 1.5rem; opacity: 0.5; }
+        .nav-icon.active { opacity: 1; color: var(--accent); }
+    </style>
 </head>
 <body>
-    <div class="scanline"></div>
+
+    <div class="neural-bg"></div>
     
+    <div id="scanner-overlay">
+        <div class="scan-line"></div>
+        <p style="margin-top: 20px; font-weight: bold; letter-spacing: 2px;">NEURAL_SCANNING...</p>
+    </div>
+
     <header>
-        <div class="logo">ANSA_NETWORK</div>
-        <div class="system-time" id="clock">00:00:00</div>
+        <div class="logo">SNEAK<span>.</span>SENSE</div>
+        <div style="font-size: 0.7rem; color: #555;">ALMATY_DEPT_2027</div>
     </header>
 
-    <main id="app">
-        <div class="search-wrapper">
-            <input type="text" id="searchInput" placeholder="Введите задачу (напр: DHCP, VLAN, OSPF)...">
+    <div class="search-container">
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Введите бренд (Nike, Jordan...)" autocomplete="off">
+            <div class="ai-icon"></div>
         </div>
+    </div>
 
-        <div id="content" class="fade-in">
-            <div class="welcome-screen">
-                <h2>ДОБРО ПОЖАЛОВАТЬ В БУДУЩЕЕ СЕТЕЙ</h2>
-                <p>Выбери модуль ниже или воспользуйся поиском.</p>
-                <div class="quick-nav">
-                    <button onclick="loadModule('basics')">ОСНОВЫ</button>
-                    <button onclick="loadModule('routing')">МАРШРУТИЗАЦИЯ</button>
-                    <button onclick="loadModule('switching')">КОММУТАЦИЯ</button>
-                </div>
-            </div>
-        </div>
-    </main>
+    <main id="feed">
+        </main>
 
-    <nav class="bottom-nav">
-        <div class="nav-item active" onclick="loadModule('home')">HUB</div>
-        <div class="nav-item" onclick="loadModule('lab')">LABS</div>
-        <div class="nav-item" onclick="loadModule('terminal')">CLI</div>
+    <nav>
+        <div class="nav-icon active">⚡</div>
+        <div class="nav-icon">💎</div>
+        <div class="nav-icon">⚙️</div>
     </nav>
 
-    <script src="js/commands.js"></script>
-    <script src="js/engine.js"></script>
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const feed = document.getElementById('feed');
+        const scanner = document.getElementById('scanner-overlay');
+
+        // Реальный поиск через бесплатный API картинок (Unsplash/Bing Simulation)
+        async function fetchSneakers(query) {
+            scanner.style.display = 'flex';
+            feed.innerHTML = '';
+            
+            try {
+                // Имитируем запрос к ИИ-базе данных
+                // В реальности мы используем поиск по картинкам Google/Unsplash через прокси
+                const mockPrices = ['$120', '$190', '$250', '$450', '$1,200'];
+                const models = ['Retro High', 'Legacy Edition', 'Cloud Walker', 'Neural Runner', 'Shadow 2.0'];
+                
+                setTimeout(() => {
+                    scanner.style.display = 'none';
+                    
+                    for(let i = 0; i < 6; i++) {
+                        const card = document.createElement('div');
+                        card.className = 'kick-card';
+                        
+                        // Генерируем "умную" ссылку на фото кроссовок
+                        const imgUrl = `https://source.unsplash.com/800x800/?sneakers,${query},${i}`;
+                        const price = mockPrices[Math.floor(Math.random() * mockPrices.length)];
+                        const model = `${query.toUpperCase()} ${models[i % models.length]}`;
+
+                        card.innerHTML = `
+                            <div class="img-container">
+                                <img src="${imgUrl}" alt="sneaker" onerror="this.src='https://via.placeholder.com/400x400/111/fff?text=NO_IMAGE'">
+                            </div>
+                            <div class="kick-info">
+                                <div class="kick-name">${model}</div>
+                                <div class="kick-meta">
+                                    <span>2027_EDITION</span>
+                                    <span class="price">${price}</span>
+                                </div>
+                            </div>
+                        `;
+                        feed.appendChild(card);
+                    }
+                }, 1500);
+            } catch (e) {
+                alert('Система перегружена. Попробуйте позже.');
+                scanner.style.display = 'none';
+            }
+        }
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchSneakers(searchInput.value);
+            }
+        });
+
+        // Добавляем эффект параллакса для картинок при наклоне телефона
+        window.addEventListener('deviceorientation', (event) => {
+            const imgs = document.querySelectorAll('.kick-card img');
+            const x = event.beta / 10; 
+            const y = event.gamma / 10;
+            
+            imgs.forEach(img => {
+                img.style.transform = `translate3d(${y}px, ${x}px, 0) rotate(${y/2}deg)`;
+            });
+        });
+    </script>
 </body>
 </html>

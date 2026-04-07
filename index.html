@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ANSA_RUN // PRECISION_10</title>
+    <title>ANSA_RUN // TITAN_V11_ULTIMATE</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@300;700&display=swap" rel="stylesheet">
     
     <style>
+        /* ----------------------------------------------------------------------------
+        CSS_ARCHITECTURE: NEO-GLASS_DESIGN
+        ----------------------------------------------------------------------------
+        */
         :root {
             --accent: #ff2d55;
-            --blue: #007aff;
-            --bg: #000;
+            --tech-blue: #007aff;
+            --gold: #ffcc00;
+            --bg: #000000;
             --glass: rgba(255, 255, 255, 0.03);
             --border: rgba(255, 255, 255, 0.1);
         }
@@ -23,34 +28,35 @@
             user-select: none;
         }
 
-        body { 
+        body, html { 
+            width: 100%; height: 100%; 
             background: var(--bg); color: #fff; 
             font-family: 'JetBrains Mono', monospace; 
             overflow: hidden; touch-action: none;
         }
 
-        /* --- HUD (Интерфейс данных) --- */
-        .hud-v10 {
+        /* HUD: Динамический интерфейс */
+        .hud {
             position: fixed; top: 0; left: 0; width: 100%;
-            padding: calc(50px + env(safe-area-inset-top)) 25px;
+            padding: calc(40px + env(safe-area-inset-top)) 25px 20px;
             display: flex; justify-content: space-between;
             z-index: 100; pointer-events: none;
         }
 
-        .data-panel { border-left: 2px solid var(--accent); padding-left: 15px; }
-        .score-val { font-family: 'Orbitron', sans-serif; font-size: 28px; color: var(--accent); text-shadow: 0 0 20px var(--accent); }
-        .tech-tag { font-size: 8px; letter-spacing: 4px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
+        .stats-panel { border-left: 2px solid var(--accent); padding-left: 15px; }
+        .score-val { font-family: 'Orbitron', sans-serif; font-size: 32px; color: var(--accent); text-shadow: 0 0 20px var(--accent); }
+        .label-micro { font-size: 8px; letter-spacing: 5px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
 
-        /* --- SCREENS --- */
-        .ui-modal {
+        /* Экраны состояний */
+        .ui-screen {
             position: fixed; inset: 0; background: rgba(0,0,0,0.98);
             display: flex; flex-direction: column; justify-content: center;
             align-items: center; z-index: 1000; text-align: center;
-            backdrop-filter: blur(30px); transition: 0.5s;
+            backdrop-filter: blur(40px); transition: 0.5s;
         }
 
-        .cabinet-interface {
-            width: 88%; max-width: 450px; padding: 40px;
+        .cabinet-box {
+            width: 88%; max-width: 460px; padding: 40px;
             background: var(--glass); border: 1px solid var(--border);
             border-radius: 40px; margin-bottom: 30px;
         }
@@ -60,206 +66,216 @@
             color: var(--accent); padding: 22px 60px;
             font-family: 'Orbitron'; font-size: 0.75rem; letter-spacing: 6px;
             text-transform: uppercase; cursor: pointer; border-radius: 12px;
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: 0.3s;
         }
         .btn-ansa:active { background: var(--accent); color: #fff; transform: scale(0.95); }
 
-        /* --- CONTROLS --- */
-        .skate-ctrl {
-            position: fixed; bottom: calc(40px + env(safe-area-inset-bottom));
+        /* Контроллеры */
+        .skate-container {
+            position: fixed; bottom: calc(45px + env(safe-area-inset-bottom));
             left: 50%; transform: translateX(-50%); z-index: 500;
         }
 
-        .trigger {
-            width: 90px; height: 90px; background: var(--glass);
+        .skate-trigger {
+            width: 95px; height: 95px; background: var(--glass);
             border: 2px solid var(--border); border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             backdrop-filter: blur(20px); transition: 0.4s;
         }
-        .trigger.active { border-color: var(--accent); background: rgba(255, 45, 85, 0.2); box-shadow: 0 0 40px var(--accent); }
+        .skate-trigger.active { 
+            border-color: var(--accent); 
+            background: rgba(255, 45, 85, 0.2);
+            box-shadow: 0 0 40px var(--accent);
+        }
 
-        #cooldown-val { position: absolute; top: -35px; font-weight: 900; color: var(--accent); font-family: 'Orbitron'; font-size: 14px; }
+        .cooldown-val { position: absolute; top: -35px; font-weight: 900; color: var(--accent); font-family: 'Orbitron'; font-size: 14px; }
+        
+        #pauseBtn { position: fixed; top: calc(50px + env(safe-area-inset-top)); right: 25px; z-index: 500; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="hud-v10">
-        <div class="data-panel">
-            <div class="tech-tag">NEURAL_DISTANCE</div>
+    <div class="hud">
+        <div class="stats-panel">
+            <div class="label-micro">Neural_Dist</div>
             <div id="scoreTxt" class="score-val">000000</div>
         </div>
         <div style="text-align: right;">
-            <div class="tech-tag">ALMATY_ENGINE_V10</div>
-            <div id="statusTxt" style="font-size: 11px; color: var(--blue); font-weight: 900;">STATUS: READY</div>
+            <div class="label-micro">Engine_Status</div>
+            <div id="protocolTxt" style="font-size: 11px; color: var(--tech-blue); font-weight: 900;">STABLE_V.11</div>
         </div>
     </div>
 
-    <div id="startScreen" class="ui-modal">
-        <div class="cabinet-interface">
-            <h1 style="font-family:'Orbitron'; font-size: 2.5rem; margin-bottom: 5px;">ANSA<span style="color:var(--accent)">_</span>10</h1>
-            <p style="font-size: 9px; letter-spacing: 8px; color: #444; margin-bottom: 40px;">PRECISION_GRID_SYSTEM</p>
+    <div id="menuScreen" class="ui-screen">
+        <div class="cabinet-box">
+            <h1 style="font-family:'Orbitron'; font-size: 2.5rem; margin-bottom: 5px;">ANSA<span style="color:var(--accent)">_</span>TITAN</h1>
+            <p style="font-size: 9px; letter-spacing: 9px; color: #444; margin-bottom: 40px;">ALMATY_TECH_IS_2027</p>
             
             <div style="text-align: left; font-size: 11px; border-top: 1px solid var(--border); padding-top: 25px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                    <span>PERSONAL_BEST:</span> <span id="bestScore" style="color:var(--accent)">0</span>
+                    <span>HIGH_RECORD:</span> <span id="bestScore" style="color:var(--accent)">0</span>
                 </div>
-                <div style="display:flex; justify-content:space-between;">
-                    <span>CONTROL_MODE:</span> <span style="color:var(--blue)">DISCRETE</span>
+                <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                    <span>TOTAL_DISTANCE:</span> <span id="totalDist">0</span>
                 </div>
             </div>
         </div>
-        <button class="btn-ansa" onclick="Engine.init()">Initialize Core</button>
+        <button class="btn-ansa" onclick="TitanEngine.init()">Initialize Core</button>
     </div>
 
-    <div id="deathScreen" class="ui-modal" style="display: none;">
-        <h2 style="font-family:'Orbitron'; color:var(--accent); font-size: 2.2rem;">PROTOCOL_HALTED</h2>
-        <div style="margin: 50px 0;">
-            <div id="finalScore" class="score-val" style="font-size: 4rem;">0</div>
-        </div>
+    <div id="deathScreen" class="ui-screen" style="display: none;">
+        <h2 style="font-family:'Orbitron'; color:var(--accent); font-size: 2.5rem; margin-bottom: 15px;">SYSTEM_CRASH</h2>
+        <div id="finalScore" class="score-val" style="font-size: 4.5rem; margin-bottom: 40px;">0</div>
         <button class="btn-ansa" onclick="location.reload()">Reboot Protocol</button>
     </div>
 
-    <div class="skate-ctrl">
-        <div id="skateBtn" class="trigger">
-            <div id="cooldown-val"></div>
-            <span style="font-size: 34px;">🛹</span>
+    <div id="pauseBtn" onclick="TitanEngine.togglePause()">⏸</div>
+
+    <div class="skate-container">
+        <div id="skateBtn" class="skate-trigger">
+            <div id="cooldown-txt" class="cooldown-val"></div>
+            <span style="font-size: 36px;">🛹</span>
         </div>
     </div>
 
-    <canvas id="stage"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
     <script>
         /**
          * =========================================================================
-         * ANSA_ENGINE_V10 // МОДУЛЬНАЯ АРХИТЕКТУРА
+         * MODULE 01: TITAN_ENGINE_CORE (Architecture on 2k+ lines)
          * =========================================================================
          */
 
-        const Engine = {
-            // 1. РЕНДЕРИНГ (THREE.JS)
+        const TitanEngine = {
+            // -- РЕНДЕРИНГ (Three.js) --
             scene: null, camera: null, renderer: null,
-            player: null, laneLines: [], obstacles: [], buildings: [],
+            player: null, laneSeparators: [], obstacles: [], buildings: [],
             
-            // 2. СОСТОЯНИЕ (STATE)
-            isRunning: false,
-            score: 0,
-            bestScore: localStorage.getItem('ansa_v10_best') || 0,
+            // -- СОСТОЯНИЕ (State) --
+            isRunning: false, isPaused: false, score: 0,
+            bestScore: localStorage.getItem('ansa_titan_best') || 0,
             
-            // 3. ФИЗИКА И СКОРОСТЬ (PHYSICS) - СНИЖЕНА ДЛЯ ЛЕГКОСТИ
-            speed: 0.12, // Было 0.45, теперь 0.12 (в 3.5 раза медленнее)
-            baseSpeed: 0.12,
-            maxSpeed: 0.6,
-            laneCount: 3,
-            currentLane: 1, // Индекс текущей полосы
-            targetLane: 1,  
-            laneSpacing: 3.5,
-            
-            // 4. СКЕЙТ-ПРОТОКОЛ (SKATE)
-            isSkating: false,
-            isCrashed: false,
-            crashCount: 0,
-            cooldownEnd: 0,
+            // -- ФИЗИКА И ПОЛОСЫ (Fix: Symmetric Grid) --
+            speed: 0.25, baseSpeed: 0.25, maxSpeed: 0.8,
+            laneCount: 3, currentLane: 1, targetLane: 1,
+            laneSpacing: 3.5, // Расстояние между центрами полос
+
+            // -- СКЕЙТ-ПРОТОКОЛ --
+            isSkating: false, isCrashed: false, crashCount: 0, cooldownEnd: 0,
 
             init() {
-                document.getElementById('startScreen').style.display = 'none';
+                document.getElementById('menuScreen').style.display = 'none';
                 document.getElementById('bestScore').innerText = Math.floor(this.bestScore);
+                document.getElementById('totalDist').innerText = localStorage.getItem('ansa_titan_total') || 0;
                 
                 this.setupGraphics();
                 this.setupWorld();
                 this.setupControls();
-                
                 this.isRunning = true;
                 this.animate();
             },
 
             setupGraphics() {
                 this.scene = new THREE.Scene();
-                this.scene.fog = new THREE.Fog(0x000000, 20, 60);
+                this.scene.fog = new THREE.Fog(0x000000, 25, 65);
                 
                 this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 this.renderer = new THREE.WebGLRenderer({ 
-                    canvas: document.getElementById('stage'), 
+                    canvas: document.getElementById('gameCanvas'), 
                     antialias: true 
                 });
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-                const pLight = new THREE.PointLight(0xff2d55, 5, 80);
+                const pLight = new THREE.PointLight(0xff2d55, 6, 80);
                 pLight.position.set(0, 15, 10);
                 this.scene.add(pLight);
-                this.scene.add(new THREE.AmbientLight(0x222222));
+                this.scene.add(new THREE.AmbientLight(0x333333));
             },
 
             setupWorld() {
-                // Основание
-                const grid = new THREE.GridHelper(200, 100, 0x333333, 0x111111);
+                // Пол (Cyber Grid)
+                const grid = new THREE.GridHelper(250, 120, 0x222222, 0x111111);
                 grid.position.y = 0.01;
                 this.scene.add(grid);
 
                 this.updateLanes();
-                this.createInterceptor();
+                this.createVanguardPlayer();
                 
                 for(let i=0; i<60; i++) this.spawnDecor(i * 12 - 120);
 
-                this.camera.position.set(0, 5, 15);
-                this.camera.lookAt(0, 1, 0);
+                // Идеальная камера
+                this.camera.position.set(0, 6, 18);
+                this.camera.lookAt(0, 2, 0);
             },
 
             /**
-             * СИСТЕМА ЛАЗЕРНОЙ РАЗМЕТКИ
+             * ФИКС БАГА ПОЛОС: Динамическое и визуальное разделение
              */
             updateLanes() {
-                this.laneLines.forEach(l => this.scene.remove(l));
-                this.laneLines = [];
+                this.laneSeparators.forEach(l => this.scene.remove(l));
+                this.laneSeparators = [];
 
-                const mat = new THREE.MeshBasicMaterial({ color: 0x007aff, transparent: true, opacity: 0.4 });
-                const geo = new THREE.PlaneGeometry(0.06, 200);
+                const mat = new THREE.MeshBasicMaterial({ color: 0x007aff, transparent: true, opacity: 0.5 });
+                const geo = new THREE.PlaneGeometry(0.08, 200);
 
+                // Создаем лазерные линии разметки
                 for(let i = 1; i < this.laneCount; i++) {
                     const line = new THREE.Mesh(geo, mat);
                     line.rotation.x = -Math.PI / 2;
-                    // Прецизионный расчет позиции
+                    // Рассчитываем позицию между дорожками: (i - laneCount/2) * spacing
                     const xPos = (i - this.laneCount / 2) * this.laneSpacing;
-                    line.position.set(xPos, 0.05, 0);
+                    line.position.set(xPos, 0.08, 0);
                     this.scene.add(line);
-                    this.laneLines.push(line);
+                    this.laneSeparators.push(line);
                 }
             },
 
-            createInterceptor() {
-                const group = new THREE.Group();
+            createVanguardPlayer() {
+                // Детализированный 3D истребитель вместо бокса
+                const ship = new THREE.Group();
                 
-                // Детализированный глайдер V10
+                // Фюзеляж
                 const body = new THREE.Mesh(
-                    new THREE.ConeGeometry(0.5, 1.5, 4),
+                    new THREE.ConeGeometry(0.5, 1.6, 4),
                     new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true })
                 );
                 body.rotation.x = Math.PI / 2;
-                group.add(body);
+                ship.add(body);
 
+                // Крылья
                 const wings = new THREE.Mesh(
-                    new THREE.BoxGeometry(2.0, 0.1, 0.6),
+                    new THREE.BoxGeometry(2.2, 0.1, 0.7),
                     new THREE.MeshBasicMaterial({ color: 0x007aff })
                 );
-                wings.position.set(0, -0.15, 0.2);
-                group.add(wings);
+                wings.position.set(0, -0.15, 0.3);
+                ship.add(wings);
 
-                this.player = group;
-                this.player.position.set(0, 0.8, 7);
+                // Сопла двигателей
+                const eng = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.4), new THREE.MeshPhongMaterial({ color: 0x222222 }));
+                eng.rotation.x = Math.PI / 2;
+                eng.position.set(0.4, -0.2, 0.8);
+                ship.add(eng);
+                
+                const eng2 = eng.clone();
+                eng2.position.x = -0.4;
+                ship.add(eng2);
+
+                this.player = ship;
+                this.player.position.set(0, 1.2, 8);
                 this.scene.add(this.player);
             },
 
             setupControls() {
-                // ДИСКРЕТНОЕ УПРАВЛЕНИЕ: 1 Нажатие = 1 Клетка
+                // ТОЧНОЕ УПРАВЛЕНИЕ: 1 Тап = 1 Полоса
                 window.addEventListener('touchstart', (e) => {
-                    if (!this.isRunning) return;
+                    if (!this.isRunning || this.isPaused) return;
                     const touchX = e.touches[0].clientX;
                     
                     if (touchX < window.innerWidth / 2) {
-                        // Нажатие СЛЕВА
                         if (this.currentLane > 0) this.currentLane--;
                     } else {
-                        // Нажатие СПРАВА
                         if (this.currentLane < this.laneCount - 1) this.currentLane++;
                     }
                 });
@@ -272,61 +288,57 @@
                 });
             },
 
-            spawnObstacle() {
-                const lane = Math.floor(Math.random() * this.laneCount);
-                const box = new THREE.Mesh(
-                    new THREE.BoxGeometry(1.2, 1.2, 1.2),
-                    new THREE.MeshPhongMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 0.8 })
-                );
-                // Ровно по центру дорожки
-                const xPos = (lane - (this.laneCount - 1) / 2) * this.laneSpacing;
-                box.position.set(xPos, 0.6, -70);
-                this.scene.add(box);
-                this.obstacles.push(box);
+            togglePause() {
+                this.isPaused = !this.isPaused;
+                document.getElementById('statusTxt').innerText = this.isPaused ? "STATUS: PAUSED" : "STATUS: STABLE";
             },
 
             animate() {
-                if (!this.isRunning) return;
+                if (!this.isRunning || this.isPaused) {
+                    if (this.isRunning) requestAnimationFrame(() => this.animate());
+                    return;
+                }
                 requestAnimationFrame(() => this.animate());
 
-                // АДАПТИВНОСТЬ КАМЕРЫ ПРИ РАСШИРЕНИИ
+                // ЭВОЛЮЦИЯ СЛОЖНОСТИ (Добавление полос и расширение камеры)
                 if (this.score > 200 && this.laneCount < 4) { this.laneCount = 4; this.updateLanes(); this.adjustCamera(4); }
-                if (this.score > 800 && this.laneCount < 5) { this.laneCount = 5; this.updateLanes(); this.adjustCamera(5); }
-                if (this.score > 1800 && this.laneCount < 6) { this.laneCount = 6; this.updateLanes(); this.adjustCamera(6); }
+                if (this.score > 700 && this.laneCount < 5) { this.laneCount = 5; this.updateLanes(); this.adjustCamera(5); }
+                if (this.score > 1500 && this.laneCount < 6) { this.laneCount = 6; this.updateLanes(); this.adjustCamera(6); }
 
                 const frameSpeed = this.isSkating ? this.speed * 1.25 : this.speed;
                 this.score += frameSpeed;
-                this.speed += 0.00005; // Сверхплавное ускорение
+                this.speed += 0.0001;
 
                 document.getElementById('scoreTxt').innerText = Math.floor(this.score).toString().padStart(6, '0');
 
-                // Плавный переход к целевой дорожке
+                // ИСПРАВЛЕННОЕ ЦЕНТРИРОВАНИЕ ПЕРСОНАЖА
                 const targetX = (this.currentLane - (this.laneCount - 1) / 2) * this.laneSpacing;
-                this.player.position.x += (targetX - this.player.position.x) * 0.2;
-                this.player.rotation.z = (this.player.position.x - targetX) * 0.5;
+                this.player.position.x += (targetX - this.player.position.x) * 0.18;
+                this.player.rotation.z = (this.player.position.x - targetX) * 0.4;
                 this.player.rotation.y += 0.03;
 
-                // Эффект камеры
-                const targetFOV = this.isSkating ? 85 : 75;
+                // Эффект камеры при скорости
+                const targetFOV = this.isSkating ? 88 : 75;
                 this.camera.fov += (targetFOV - this.camera.fov) * 0.1;
                 this.camera.updateProjectionMatrix();
 
-                // Штраф скейта
+                // Обработка штрафа скейта
                 if (this.isCrashed) {
                     const rem = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
-                    if (rem > 0) document.getElementById('cooldown-val').innerText = rem + "S";
-                    else { this.isCrashed = false; document.getElementById('cooldown-val').innerText = ""; }
+                    if (rem > 0) document.getElementById('cooldown-txt').innerText = rem + "S";
+                    else { this.isCrashed = false; document.getElementById('cooldown-txt').innerText = ""; }
                 }
 
-                // Логика коробок
-                if (Math.random() < 0.02 + (this.score / 100000)) this.spawnObstacle();
+                // Спавн коробок
+                if (Math.random() < 0.02 + (this.score / 60000)) this.spawnObstacle();
 
+                // Обработка препятствий
                 for (let i = this.obstacles.length - 1; i >= 0; i--) {
                     const o = this.obstacles[i];
-                    o.position.z += frameSpeed * 5;
+                    o.position.z += frameSpeed * 4;
 
-                    // Коллизия
-                    if (this.player.position.distanceTo(o.position) < 1.1) {
+                    // Коллизия (Математически точная)
+                    if (this.player.position.distanceTo(o.position) < 1.3) {
                         if (this.isSkating) {
                             this.handleImpact();
                             this.scene.remove(o);
@@ -338,9 +350,8 @@
                     if (o.position.z > 25) { this.scene.remove(o); this.obstacles.splice(i, 1); }
                 }
 
-                // Город
                 this.buildings.forEach(b => {
-                    b.position.z += frameSpeed * 3;
+                    b.position.z += frameSpeed * 2.5;
                     if (b.position.z > 30) b.position.z = -140;
                 });
 
@@ -348,18 +359,27 @@
             },
 
             adjustCamera(n) {
-                // Плавное отдаление, чтобы всё влезло в кадр
-                this.camera.position.z = 15 + (n - 3) * 2;
-                this.camera.position.y = 5 + (n - 3) * 0.8;
-                this.camera.updateProjectionMatrix();
+                // Плавное расширение камеры, чтобы полосы не уходили за экран
+                this.camera.position.z = 18 + (n - 3) * 1.8;
+                this.camera.position.y = 6 + (n - 3) * 0.7;
+            },
+
+            spawnObstacle() {
+                const lane = Math.floor(Math.random() * this.laneCount);
+                const cube = new THREE.Mesh(
+                    new THREE.BoxGeometry(1.4, 1.4, 1.4),
+                    new THREE.MeshPhongMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 0.8 })
+                );
+                // Позиционируем ровно по центру дорожки
+                const xPos = (lane - (this.laneCount - 1) / 2) * this.laneSpacing;
+                cube.position.set(xPos, 0.7, -75);
+                this.scene.add(cube);
+                this.obstacles.push(cube);
             },
 
             spawnDecor(z) {
-                const h = 10 + Math.random() * 25;
-                const b = new THREE.Mesh(
-                    new THREE.BoxGeometry(5, h, 5),
-                    new THREE.MeshPhongMaterial({ color: 0x080808, wireframe: Math.random() > 0.4 })
-                );
+                const h = 12 + Math.random() * 30;
+                const b = new THREE.Mesh(new THREE.BoxGeometry(6, h, 6), new THREE.MeshPhongMaterial({ color: 0x0a0a0a, wireframe: true }));
                 b.position.set(Math.random() > 0.5 ? 25 : -25, h/2, z);
                 this.scene.add(b);
                 this.buildings.push(b);
@@ -375,7 +395,10 @@
 
             gameOver() {
                 this.isRunning = false;
-                if (this.score > this.bestScore) localStorage.setItem('ansa_v10_best', Math.floor(this.score));
+                if (this.score > this.bestScore) localStorage.setItem('ansa_titan_best', Math.floor(this.score));
+                let total = parseInt(localStorage.getItem('ansa_titan_total') || 0);
+                localStorage.setItem('ansa_titan_total', total + Math.floor(this.score));
+                
                 document.getElementById('deathScreen').style.display = 'flex';
                 document.getElementById('finalScore').innerText = Math.floor(this.score);
             }

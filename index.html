@@ -3,253 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ANSA_RUN_3D // PROTOCOL_2027</title>
+    <title>ANSA_RUN_3D // ULTIMATE_EDITION</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@300;700&display=swap" rel="stylesheet">
     
     <style>
-        :root { --accent: #ff2d55; --blue: #007aff; }
+        :root {
+            --accent: #ff2d55;
+            --tech-blue: #007aff;
+            --gold: #ffcc00;
+            --bg: #020202;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: #000; overflow: hidden; font-family: sans-serif; touch-action: none; }
         
-        /* UI HUD */
-        .hud {
-            position: fixed; top: 0; left: 0; width: 100%; padding: 50px 25px;
-            display: flex; justify-content: space-between; z-index: 100; pointer-events: none;
+        body { 
+            background: var(--bg); 
+            color: #fff; 
+            font-family: 'JetBrains Mono', monospace; 
+            overflow: hidden; 
+            touch-action: none;
+            -webkit-user-select: none;
         }
-        .score-box { border-left: 3px solid var(--accent); padding-left: 15px; font-family: 'Orbitron', sans-serif; }
-        .score-val { font-size: 24px; color: var(--accent); text-shadow: 0 0 15px var(--accent); }
 
-        /* Controls */
-        .skate-wrap { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 100; }
-        .skate-btn {
-            width: 80px; height: 80px; background: rgba(255,255,255,0.05);
-            border: 2px solid rgba(255,255,255,0.1); border-radius: 50%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            backdrop-filter: blur(15px); transition: 0.3s;
+        /* --- ADVANCED UI SYSTEM --- */
+        .hud-layer {
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: env(safe-area-inset-top) 25px 20px;
+            display: flex; justify-content: space-between;
+            z-index: 100; pointer-events: none;
         }
-        .skate-btn.active { border-color: var(--accent); background: rgba(255,45,85,0.3); box-shadow: 0 0 30px var(--accent); }
-        .skate-btn.disabled { opacity: 0.2; }
 
-        /* Screens */
-        .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 1000; text-align: center; backdrop-filter: blur(20px);
+        .stats-panel { border-left: 2px solid var(--accent); padding-left: 15px; }
+        .score-display { font-family: 'Orbitron', sans-serif; font-size: 32px; color: var(--accent); text-shadow: 0 0 20px var(--accent); }
+        .label-tech { font-size: 8px; letter-spacing: 4px; color: #555; text-transform: uppercase; }
+
+        /* --- CABINET & MODALS --- */
+        .screen-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.98);
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 1000; text-align: center;
+            backdrop-filter: blur(30px); transition: 0.5s;
         }
-        .btn-action {
-            background: none; border: 1px solid var(--accent); color: var(--accent);
-            padding: 15px 50px; font-family: 'Orbitron'; margin-top: 30px; letter-spacing: 3px;
+
+        .cabinet-box {
+            width: 85%; max-width: 400px; padding: 30px;
+            background: var(--glass); border: 1px solid var(--border);
+            border-radius: 30px; margin-bottom: 20px;
         }
-        
-        #pauseBtn { position: fixed; top: 50px; right: 25px; font-size: 20px; z-index: 500; cursor: pointer; }
+
+        .btn-neural {
+            background: none; border: 1px solid var(--accent);
+            color: var(--accent); padding: 20px 60px;
+            font-family: 'Orbitron'; font-size: 0.7rem; letter-spacing: 5px;
+            text-transform: uppercase; cursor: pointer; transition: 0.3s;
+        }
+        .btn-neural:active { background: var(--accent); color: #fff; transform: scale(0.95); }
+
+        /* --- MOBILE CONTROLS --- */
+        .control-hub {
+            position: fixed; bottom: calc(40px + env(safe-area-inset-bottom));
+            left: 50%; transform: translateX(-50%); z-index: 500;
+        }
+
+        .trigger-btn {
+            width: 95px; height: 95px; background: var(--glass);
+            border: 2px solid var(--border); border-radius: 50%;
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; backdrop-filter: blur(20px);
+            transition: 0.4s;
+        }
+        .trigger-btn.active { border-color: var(--accent); background: rgba(255, 45, 85, 0.2); box-shadow: 0 0 40px var(--accent); }
+
+        /* --- LANGUAGE SWITCHER --- */
+        .lang-dock {
+            position: fixed; top: 100px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 100;
+        }
+        .lang-btn {
+            font-size: 10px; font-weight: bold; background: var(--glass); 
+            border: 1px solid var(--border); padding: 5px 10px; border-radius: 5px; color: #fff;
+        }
+        .lang-btn.active { color: var(--accent); border-color: var(--accent); }
     </style>
 </head>
 <body>
 
-    <div id="startScreen" class="overlay">
-        <h1 style="font-family:'Orbitron'; font-size: 2rem; color: #fff;">ANSA<span style="color:var(--accent)">_</span>3D</h1>
-        <p style="font-size: 10px; letter-spacing: 5px; color: #444; margin-bottom: 30px;">ALMATY_ENGINE_V3</p>
-        <button class="btn-action" onclick="initGame()">INIT_SYSTEM</button>
-    </div>
-
-    <div class="hud">
-        <div class="score-box">
-            <div style="font-size: 9px; color: #555; letter-spacing: 2px;">NEURAL_SCORE</div>
-            <div id="score" class="score-val">000000</div>
+    <div class="hud-layer">
+        <div class="stats-panel">
+            <div id="ui-label-score" class="label-tech">Loading Protocol...</div>
+            <div id="scoreVal" class="score-display">000000</div>
+        </div>
+        <div style="text-align: right;">
+            <div id="ui-label-status" class="label-tech">System: Online</div>
+            <div id="speedVal" style="font-size: 12px; color: var(--tech-blue); font-weight: bold;">1.00x</div>
         </div>
     </div>
 
-    <div id="pauseBtn" onclick="togglePause()">⏸</div>
-
-    <div class="skate-wrap">
-        <div id="skateBtn" class="skate-btn">
-            <span style="font-size: 20px;">🛹</span>
-            <span id="timer" style="font-size: 10px; font-weight: bold; color: var(--accent);"></span>
-        </div>
+    <div class="lang-dock">
+        <div class="lang-btn active" onclick="LangSystem.set('ru')">RU</div>
+        <div class="lang-btn" onclick="LangSystem.set('kk')">KZ</div>
+        <div class="lang-btn" onclick="LangSystem.set('en')">EN</div>
     </div>
 
-    <div id="deathScreen" class="overlay" style="display:none;">
-        <h2 style="font-family:'Orbitron'; color:var(--accent);">CRASH_DETECTED</h2>
-        <button class="btn-action" onclick="location.reload()">REBOOT</button>
+    <div id="startScreen" class="screen-overlay">
+        <div class="cabinet-box">
+            <h1 class="font-cyber" style="font-family:'Orbitron'; font-size: 2.2rem; margin-bottom: 10px;">ANSA<span style="color:var(--accent)">_</span>RUN</h1>
+            <p style="font-size: 8px; letter-spacing: 6px; color: #555; margin-bottom: 30px;">ULTIMATE_ARCHITECTURE_2027</p>
+            
+            <div style="text-align: left; font-size: 10px; border-top: 1px solid var(--border); padding-top: 20px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span id="ui-best">Global Best:</span> <span id="highScore" style="color:var(--accent)">0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span id="ui-total">Total Dist:</span> <span id="totalDist">0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span id="ui-sessions">Sessions:</span> <span id="sessionCount">0</span>
+                </div>
+            </div>
+        </div>
+        <button id="ui-boot-btn" class="btn-neural" onclick="Core.boot()">Boot System</button>
+    </div>
+
+    <div id="deathScreen" class="screen-overlay" style="display: none;">
+        <h2 style="font-family:'Orbitron'; color:var(--accent); font-size: 2rem;">CRITICAL_FAILURE</h2>
+        <div style="margin: 40px 0;">
+            <div id="finalScore" class="score-display" style="font-size: 3.5rem;">0</div>
+            <p id="ui-saved" style="font-size: 10px; color: #444; margin-top: 10px;">DATA_SAVED_TO_CABINET</p>
+        </div>
+        <button id="ui-reboot-btn" class="btn-neural" onclick="location.reload()">Reboot System</button>
+    </div>
+
+    <div class="control-hub">
+        <div id="skateBtn" class="trigger-btn">
+            <span id="cooldown" style="position:absolute; top:-30px; font-weight:bold; color:var(--accent); font-size:12px;"></span>
+            <span style="font-size: 32px;">🛹</span>
+        </div>
     </div>
 
     <script>
         /**
-         * ANSA_RUN_3D // CORE ENGINE
-         * Three.js, Физика, Динамические дорожки
+         * ==========================================
+         * 1. LANGUAGE MODULE (Localization System)
+         * ==========================================
          */
-        
-        let scene, camera, renderer, player, floor;
-        let obstacles = [];
-        let isRunning = false;
-        let isPaused = false;
-        let score = 0;
-        let speed = 0.4;
-        let laneCount = 3;
-        let currentLane = 1;
-        let isSkating = false;
-        let isCrashed = false;
-        let crashCount = 0;
-        let cooldownEnd = 0;
-
-        const LANE_WIDTH = 2; // Ширина дорожки в 3D единицах
-
-        function initGame() {
-            document.getElementById('startScreen').style.display = 'none';
-            
-            // 1. Создание Сцены
-            scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x000000, 10, 35);
-            
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.body.appendChild(renderer.domElement);
-
-            // 2. Освещение (Neon Style)
-            const light = new THREE.PointLight(0xff2d55, 2, 50);
-            light.position.set(0, 5, 5);
-            scene.add(light);
-            scene.add(new THREE.AmbientLight(0x404040));
-
-            // 3. Пол (Бесконечная сетка)
-            const floorGeo = new THREE.PlaneGeometry(20, 100);
-            const floorMat = new THREE.MeshPhongMaterial({ 
-                color: 0x050505, 
-                emissive: 0x111111,
-                side: THREE.DoubleSide 
-            });
-            floor = new THREE.Mesh(floorGeo, floorMat);
-            floor.rotation.x = -Math.PI / 2;
-            scene.add(floor);
-
-            // Сетка на полу
-            const grid = new THREE.GridHelper(100, 50, 0xff2d55, 0x222222);
-            grid.rotation.x = 0;
-            scene.add(grid);
-
-            // 4. Игрок (3D Глайдер)
-            const playerGeo = new THREE.IcosahedronGeometry(0.4, 0);
-            const playerMat = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true });
-            player = new THREE.Mesh(playerGeo, playerMat);
-            player.position.y = 0.5;
-            player.position.z = 5;
-            scene.add(player);
-
-            camera.position.set(0, 3, 10);
-            camera.lookAt(player.position);
-
-            isRunning = true;
-            animate();
-        }
-
-        // Управление под большой палец
-        window.addEventListener('touchstart', (e) => {
-            if (!isRunning || isPaused) return;
-            const touchX = e.touches[0].clientX;
-            const screenPart = window.innerWidth / laneCount;
-            currentLane = Math.floor(touchX / screenPart);
-        });
-
-        document.getElementById('skateBtn').addEventListener('touchstart', (e) => {
-            e.stopPropagation();
-            if (isCrashed) return;
-            isSkating = !isSkating;
-            document.getElementById('skateBtn').classList.toggle('active', isSkating);
-        });
-
-        function spawnObstacle() {
-            const geo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
-            const mat = new THREE.MeshPhongMaterial({ color: 0xff2d55, emissive: 0xff2d55 });
-            const box = new THREE.Mesh(geo, mat);
-            
-            const lane = Math.floor(Math.random() * laneCount);
-            const xPos = (lane - (laneCount - 1) / 2) * LANE_WIDTH;
-            
-            box.position.set(xPos, 0.4, -40);
-            scene.add(box);
-            obstacles.push(box);
-        }
-
-        function togglePause() {
-            isPaused = !isPaused;
-            document.getElementById('pauseBtn').innerText = isPaused ? "▶" : "⏸";
-        }
-
-        function animate() {
-            if (!isRunning || isPaused) {
-                requestAnimationFrame(animate);
-                return;
-            }
-
-            // Динамическая сложность (Расширение дорожек)
-            if (score > 100 && laneCount < 4) laneCount = 4;
-            if (score > 500 && laneCount < 5) laneCount = 5;
-            if (score > 1000 && laneCount < 6) laneCount = 6;
-
-            const currentSpeed = isSkating ? speed * 1.25 : speed; // Скорость 1.25x
-            score += currentSpeed;
-            document.getElementById('score').innerText = Math.floor(score).toString().padStart(6, '0');
-
-            // Эффект камеры при скорости
-            const targetFOV = isSkating ? 85 : 75;
-            camera.fov += (targetFOV - camera.fov) * 0.1;
-            camera.updateProjectionMatrix();
-
-            // Движение игрока
-            const targetX = (currentLane - (laneCount - 1) / 2) * LANE_WIDTH;
-            player.position.x += (targetX - player.position.x) * 0.15;
-            player.rotation.y += 0.05;
-
-            // Штраф скейта (5, 10, 15... сек)
-            if (isCrashed) {
-                const remaining = Math.ceil((cooldownEnd - Date.now()) / 1000);
-                if (remaining > 0) {
-                    document.getElementById('timer').innerText = remaining + "S";
-                    document.getElementById('skateBtn').classList.add('disabled');
-                    isSkating = false;
-                } else {
-                    isCrashed = false;
-                    document.getElementById('timer').innerText = "";
-                    document.getElementById('skateBtn').classList.remove('disabled');
+        const LangSystem = {
+            current: 'ru',
+            data: {
+                ru: {
+                    score: "Дистанция", status: "Система: Ок", boot: "Запуск", 
+                    reboot: "Перезагрузка", best: "Рекорд:", total: "Всего:", 
+                    sessions: "Забегов:", saved: "Данные сохранены"
+                },
+                kk: {
+                    score: "Қашықтық", status: "Жүйе: Ок", boot: "Іске қосу", 
+                    reboot: "Қайта жүктеу", best: "Рекорд:", total: "Барлығы:", 
+                    sessions: "Сессиялар:", saved: "Мәліметтер сақталды"
+                },
+                en: {
+                    score: "Distance", status: "System: Online", boot: "Boot System", 
+                    reboot: "Reboot System", best: "Global Best:", total: "Total Dist:", 
+                    sessions: "Sessions:", saved: "Data saved to cabinet"
                 }
+            },
+            set(l) {
+                this.current = l;
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === l));
+                this.updateUI();
+            },
+            updateUI() {
+                const d = this.data[this.current];
+                document.getElementById('ui-label-score').innerText = d.score;
+                document.getElementById('ui-label-status').innerText = d.status;
+                document.getElementById('ui-boot-btn').innerText = d.boot;
+                document.getElementById('ui-reboot-btn').innerText = d.reboot;
+                document.getElementById('ui-best').innerText = d.best;
+                document.getElementById('ui-total').innerText = d.total;
+                document.getElementById('ui-sessions').innerText = d.sessions;
+                document.getElementById('ui-saved').innerText = d.saved;
             }
+        };
 
-            // Препятствия
-            if (Math.random() < 0.03 + (score/50000)) spawnObstacle();
+        /**
+         * ==========================================
+         * 2. DATA MODULE (Persistence & Statistics)
+         * ==========================================
+         */
+        const Data = {
+            save(score) {
+                let best = localStorage.getItem('ansa_ultra_best') || 0;
+                let total = parseInt(localStorage.getItem('ansa_total_dist') || 0);
+                let sessions = parseInt(localStorage.getItem('ansa_sessions') || 0);
 
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                const o = obstacles[i];
-                o.position.z += currentSpeed;
+                if (score > best) localStorage.setItem('ansa_ultra_best', Math.floor(score));
+                localStorage.setItem('ansa_total_dist', total + Math.floor(score));
+                localStorage.setItem('ansa_sessions', sessions + 1);
+            },
+            load() {
+                document.getElementById('highScore').innerText = localStorage.getItem('ansa_ultra_best') || 0;
+                document.getElementById('totalDist').innerText = localStorage.getItem('ansa_total_dist') || 0;
+                document.getElementById('sessionCount').innerText = localStorage.getItem('ansa_sessions') || 0;
+            }
+        };
 
-                // Коллизия в 3D
-                const dist = player.position.distanceTo(o.position);
-                if (dist < 0.8) {
-                    if (isSkating) {
-                        isCrashed = true;
-                        crashCount++;
-                        cooldownEnd = Date.now() + (crashCount * 5000);
-                        scene.remove(o);
-                        obstacles.splice(i, 1);
-                        document.getElementById('skateBtn').classList.remove('active');
-                    } else {
-                        isRunning = false;
-                        document.getElementById('deathScreen').style.display = 'flex';
+        /**
+         * ==========================================
+         * 3. CORE ENGINE (Architecture & Main Loop)
+         * ==========================================
+         */
+        const Core = {
+            scene: null, camera: null, renderer: null,
+            player: null, obstacles: [], buildings: [],
+            isRunning: false, score: 0, speed: 0.35, laneCount: 3,
+            isSkating: false, isCrashed: false, crashCount: 0, cooldownEnd: 0,
+
+            boot() {
+                document.getElementById('startScreen').style.display = 'none';
+                this.init3D();
+                this.setupEvents();
+                this.isRunning = true;
+                this.loop();
+            },
+
+            init3D() {
+                this.scene = new THREE.Scene();
+                this.scene.fog = new THREE.Fog(0x000000, 15, 45);
+                
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                document.body.appendChild(this.renderer.domElement);
+
+                // Lighting
+                const light = new THREE.PointLight(0xff2d55, 3, 60);
+                light.position.set(0, 10, 5);
+                this.scene.add(light);
+                this.scene.add(new THREE.AmbientLight(0x222222));
+
+                // Ground & Grid
+                const grid = new THREE.GridHelper(200, 100, 0xff2d55, 0x111111);
+                this.scene.add(grid);
+
+                // Buildings (Procedural Almaty 2027)
+                for(let i=0; i<40; i++) this.spawnBuilding(i * 10 - 100);
+
+                // Player Glider
+                this.createPlayer();
+                this.camera.position.set(0, 4, 12);
+                this.camera.lookAt(0, 0, 0);
+            },
+
+            createPlayer() {
+                const group = new THREE.Group();
+                const body = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5, 0), new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true }));
+                group.add(body);
+                const neon = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.4), new THREE.MeshBasicMaterial({ color: 0x007aff }));
+                neon.position.y = -0.2;
+                group.add(neon);
+                this.player = group;
+                this.player.position.set(0, 0.6, 5);
+                this.scene.add(this.player);
+            },
+
+            spawnBuilding(z) {
+                const h = 5 + Math.random() * 20;
+                const b = new THREE.Mesh(new THREE.BoxGeometry(4, h, 4), new THREE.MeshPhongMaterial({ color: 0x111111, wireframe: Math.random() > 0.5 }));
+                b.position.set(Math.random() > 0.5 ? 15 : -15, h/2, z);
+                this.scene.add(b);
+                this.buildings.push(b);
+            },
+
+            spawnObstacle() {
+                const lane = Math.floor(Math.random() * this.laneCount);
+                const box = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshPhongMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 0.5 }));
+                box.position.set((lane - (this.laneCount - 1) / 2) * 2.5, 0.5, -50);
+                this.scene.add(box);
+                this.obstacles.push(box);
+            },
+
+            setupEvents() {
+                window.addEventListener('touchstart', (e) => {
+                    const laneWidth = window.innerWidth / this.laneCount;
+                    this.targetLane = Math.floor(e.touches[0].clientX / laneWidth);
+                });
+                document.getElementById('skateBtn').addEventListener('touchstart', (e) => {
+                    if (!this.isCrashed) {
+                        this.isSkating = !this.isSkating;
+                        document.getElementById('skateBtn').classList.toggle('active', this.isSkating);
                     }
+                });
+            },
+
+            loop() {
+                if (!this.isRunning) return;
+                requestAnimationFrame(() => this.loop());
+
+                // Difficulty Evolution
+                if (this.score > 100 && this.laneCount < 4) this.laneCount = 4;
+                if (this.score > 500 && this.laneCount < 5) this.laneCount = 5;
+
+                const curSpeed = this.isSkating ? this.speed * 1.25 : this.speed;
+                this.score += curSpeed;
+                this.speed += 0.0001;
+
+                document.getElementById('scoreVal').innerText = Math.floor(this.score).toString().padStart(6, '0');
+                document.getElementById('speedVal').innerText = curSpeed.toFixed(2) + "x";
+
+                // Movement & Collision
+                const targetX = (this.targetLane - (this.laneCount - 1) / 2) * 2.5;
+                if (!isNaN(targetX)) this.player.position.x += (targetX - this.player.position.x) * 0.15;
+                this.player.rotation.y += 0.02;
+
+                if (Math.random() < 0.02 + (this.score/50000)) this.spawnObstacle();
+
+                for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                    const o = this.obstacles[i];
+                    o.position.z += curSpeed * 2.5;
+                    if (this.player.position.distanceTo(o.position) < 0.9) {
+                        if (this.isSkating) this.handleCrash(); else this.gameOver();
+                    }
+                    if (o.position.z > 15) { this.scene.remove(o); this.obstacles.splice(i, 1); }
                 }
 
-                if (o.position.z > 10) {
-                    scene.remove(o);
-                    obstacles.splice(i, 1);
-                }
+                this.buildings.forEach(b => { b.position.z += curSpeed * 1.5; if (b.position.z > 20) b.position.z = -100; });
+                this.renderer.render(this.scene, this.camera);
+            },
+
+            handleCrash() {
+                this.isSkating = false;
+                this.isCrashed = true;
+                this.crashCount++;
+                this.cooldownEnd = Date.now() + (this.crashCount * 5000);
+                document.getElementById('skateBtn').classList.remove('active');
+            },
+
+            gameOver() {
+                this.isRunning = false;
+                Data.save(this.score);
+                document.getElementById('deathScreen').style.display = 'flex';
+                document.getElementById('finalScore').innerText = Math.floor(this.score);
             }
+        };
 
-            renderer.render(scene, camera);
-            requestAnimationFrame(animate);
-        }
+        // Bootstrapping
+        window.onload = () => {
+            Data.load();
+            LangSystem.set('ru');
+        };
     </script>
 </body>
 </html>

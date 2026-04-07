@@ -23,3 +23,11 @@ function loadModule(key) {
 setInterval(() => {
     document.getElementById('clock').innerText = new Date().toLocaleTimeString();
 }, 1000);
+
+// Внутри функции loadModule, перед списком шагов:
+content.innerHTML = `
+    <div class="card">
+        <img src="images/${key}.png" style="width:100%; border-radius:10px; margin-bottom:15px;" onerror="this.style.display='none'">
+        <h2>${data.title}</h2>
+        ...
+`;

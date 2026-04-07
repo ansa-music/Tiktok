@@ -1,346 +1,605 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ANSA_RUN_3D // FINAL_V7</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@300;700&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --accent: #ff2d55;
-            --blue: #007aff;
-            --bg: #000;
-            --glass: rgba(255, 255, 255, 0.02);
-            --border: rgba(255, 255, 255, 0.08);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>ANSA_RUN_3D // FINAL_V8</title>
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; touch-action: none; }
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@300;700&display=swap" rel="stylesheet">
 
-        /* --- UI SYSTEMS --- */
-        .hud {
-            position: fixed; top: 0; left: 0; width: 100%;
-            padding: calc(50px + env(safe-area-inset-top)) 30px;
-            display: flex; justify-content: space-between;
-            z-index: 100; pointer-events: none;
-        }
+  <style>
+    :root {
+      --accent: #ff2d55;
+      --blue: #007aff;
+      --bg: #000;
+      --glass: rgba(255, 255, 255, 0.02);
+      --border: rgba(255, 255, 255, 0.08);
+    }
 
-        .data-stream { border-left: 3px solid var(--accent); padding-left: 15px; }
-        .score-val { font-family: 'Orbitron', sans-serif; font-size: 30px; color: var(--accent); text-shadow: 0 0 20px var(--accent); }
-        .tag { font-size: 8px; letter-spacing: 5px; color: #444; text-transform: uppercase; margin-bottom: 5px; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        /* --- MODAL SCREENS --- */
-        .ui-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.98);
-            display: flex; flex-direction: column; justify-content: center;
-            align-items: center; z-index: 1000; text-align: center;
-            backdrop-filter: blur(40px); transition: 0.6s;
-        }
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      overflow: hidden;
+      touch-action: none;
+    }
 
-        .cabinet-box {
-            width: 85%; max-width: 440px; padding: 40px;
-            background: var(--glass); border: 1px solid var(--border);
-            border-radius: 40px; margin-bottom: 30px;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.7);
-        }
+    .hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: calc(50px + env(safe-area-inset-top)) 30px;
+      display: flex;
+      justify-content: space-between;
+      z-index: 100;
+      pointer-events: none;
+    }
 
-        .btn-neural {
-            background: none; border: 1px solid var(--accent);
-            color: var(--accent); padding: 22px 70px;
-            font-family: 'Orbitron'; font-size: 0.7rem; letter-spacing: 7px;
-            text-transform: uppercase; cursor: pointer; border-radius: 12px;
-            transition: 0.3s;
-        }
-        .btn-neural:active { background: var(--accent); color: #fff; transform: scale(0.95); }
+    .data-stream {
+      border-left: 3px solid var(--accent);
+      padding-left: 15px;
+    }
 
-        /* --- CONTROLS --- */
-        .skate-ctrl {
-            position: fixed; bottom: calc(50px + env(safe-area-inset-bottom));
-            left: 50%; transform: translateX(-50%); z-index: 500;
-        }
+    .score-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 30px;
+      color: var(--accent);
+      text-shadow: 0 0 20px var(--accent);
+    }
 
-        .trigger {
-            width: 100px; height: 100px; background: var(--glass);
-            border: 2px solid var(--border); border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            backdrop-filter: blur(20px); transition: 0.4s;
-        }
-        .trigger.active { 
-            border-color: var(--accent); 
-            background: rgba(255, 45, 85, 0.2);
-            box-shadow: 0 0 50px var(--accent);
-            transform: scale(1.1) translateY(-10px);
-        }
+    .tag {
+      font-size: 8px;
+      letter-spacing: 5px;
+      color: #444;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
 
-        .timer-label { position: absolute; top: -35px; font-weight: 900; color: var(--accent); font-family: 'Orbitron'; font-size: 14px; }
-    </style>
+    .ui-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.98);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      text-align: center;
+      backdrop-filter: blur(40px);
+      transition: 0.6s;
+      padding: 20px;
+    }
+
+    .cabinet-box {
+      width: 85%;
+      max-width: 440px;
+      padding: 40px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+    }
+
+    .btn-neural {
+      background: none;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 22px 40px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: 0.3s;
+    }
+
+    .btn-neural:active {
+      background: var(--accent);
+      color: #fff;
+      transform: scale(0.95);
+    }
+
+    .skate-ctrl {
+      position: fixed;
+      bottom: calc(50px + env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 500;
+    }
+
+    .trigger {
+      width: 100px;
+      height: 100px;
+      background: var(--glass);
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(20px);
+      transition: 0.4s;
+      position: relative;
+      user-select: none;
+    }
+
+    .trigger.active {
+      border-color: var(--accent);
+      background: rgba(255, 45, 85, 0.2);
+      box-shadow: 0 0 50px var(--accent);
+      transform: scale(1.1) translateY(-10px);
+    }
+
+    .timer-label {
+      position: absolute;
+      top: -35px;
+      font-weight: 900;
+      color: var(--accent);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="hud">
-        <div class="data-stream">
-            <div id="ui-dist-label" class="tag">SYNC_DISTANCE</div>
-            <div id="scoreTxt" class="score-val">000000</div>
-        </div>
-        <div style="text-align: right;">
-            <div id="ui-protocol-label" class="tag">PROTOCOL_V.7</div>
-            <div id="statusTxt" style="font-size: 11px; color: var(--blue); font-weight: 900;">STATUS: STABLE</div>
-        </div>
+  <div class="hud">
+    <div class="data-stream">
+      <div id="ui-dist-label" class="tag">SYNC_DISTANCE</div>
+      <div id="scoreTxt" class="score-val">000000</div>
     </div>
-
-    <div id="menuScreen" class="ui-overlay">
-        <div class="cabinet-box">
-            <h1 style="font-family:'Orbitron'; font-size: 2.2rem; margin-bottom: 10px;">ANSA<span style="color:var(--accent)">_</span>FINAL</h1>
-            <p style="font-size: 9px; letter-spacing: 9px; color: #333; margin-bottom: 40px;">ALMATY_TECH_IS_2027</p>
-            
-            <div style="text-align: left; font-size: 11px; border-top: 1px solid var(--border); padding-top: 25px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                    <span id="ui-record">RECORD:</span> <span id="bestScore" style="color:var(--accent)">0</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                    <span id="ui-trip">TOTAL:</span> <span id="totalDist">0</span>
-                </div>
-            </div>
-        </div>
-        <button id="ui-boot-btn" class="btn-neural" onclick="Engine.init()">INIT_CORE</button>
+    <div style="text-align:right;">
+      <div id="ui-protocol-label" class="tag">PROTOCOL_V.8</div>
+      <div id="statusTxt" style="font-size:11px; color:var(--blue); font-weight:900;">STATUS: STABLE</div>
     </div>
+  </div>
 
-    <div id="deathScreen" class="ui-overlay" style="display: none;">
-        <h2 style="font-family:'Orbitron'; color:var(--accent); font-size: 2.2rem;">SYSTEM_FATAL_ERROR</h2>
-        <div style="margin: 50px 0;">
-            <div id="finalScore" class="score-val" style="font-size: 4rem;">0</div>
+  <div id="menuScreen" class="ui-overlay">
+    <div class="cabinet-box">
+      <h1 style="font-family:'Orbitron',sans-serif; font-size:2.2rem; margin-bottom:10px;">
+        ANSA<span style="color:var(--accent)">_</span>FINAL
+      </h1>
+      <p style="font-size:9px; letter-spacing:9px; color:#333; margin-bottom:40px;">ALMATY_TECH_IS_2027</p>
+
+      <div style="text-align:left; font-size:11px; border-top:1px solid var(--border); padding-top:25px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+          <span>RECORD:</span>
+          <span id="bestScore" style="color:var(--accent)">0</span>
         </div>
-        <button id="ui-reboot-btn" class="btn-neural" onclick="location.reload()">REBOOT_PROTOCOL</button>
-    </div>
-
-    <div class="skate-ctrl">
-        <div id="skateBtn" class="trigger">
-            <div id="timerTxt" class="timer-label"></div>
-            <span style="font-size: 36px;">🛹</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+          <span>TOTAL:</span>
+          <span id="totalDist">0</span>
         </div>
+      </div>
     </div>
+    <button class="btn-neural" onclick="Engine.init()">INIT_CORE</button>
+  </div>
 
-    <canvas id="stage"></canvas>
+  <div id="deathScreen" class="ui-overlay" style="display:none;">
+    <h2 style="font-family:'Orbitron',sans-serif; color:var(--accent); font-size:2.2rem;">SYSTEM_FATAL_ERROR</h2>
+    <div style="margin:50px 0;">
+      <div id="finalScore" class="score-val" style="font-size:4rem;">0</div>
+    </div>
+    <button class="btn-neural" onclick="Engine.restart()">REBOOT_PROTOCOL</button>
+  </div>
 
-    <script>
-        /**
-         * =========================================================================
-         * MODULE 01: ADVANCED CAMERA & RENDER ENGINE
-         * =========================================================================
-         */
-        const Engine = {
-            scene: null, camera: null, renderer: null,
-            player: null, laneLines: [], obstacles: [], buildings: [],
-            isRunning: false, score: 0, speed: 0.5,
-            laneCount: 3, targetLane: 1,
-            isSkating: false, isCrashed: false, crashCount: 0, cooldownEnd: 0,
+  <div class="skate-ctrl">
+    <div id="skateBtn" class="trigger">
+      <div id="timerTxt" class="timer-label"></div>
+      <span style="font-size:36px;">🛹</span>
+    </div>
+  </div>
 
-            init() {
-                document.getElementById('menuScreen').style.display = 'none';
-                this.setupGraphics();
-                this.setupWorld();
-                this.setupControls();
-                this.isRunning = true;
-                this.animate();
-            },
+  <canvas id="stage"></canvas>
 
-            setupGraphics() {
-                this.scene = new THREE.Scene();
-                this.scene.fog = new THREE.Fog(0x000000, 20, 55);
-                
-                // Исправленный FOV для адаптивности
-                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                this.renderer = new THREE.WebGLRenderer({ 
-                    canvas: document.getElementById('stage'), 
-                    antialias: true, 
-                    powerPreference: "high-performance" 
-                });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  <script>
+    const Engine = {
+      scene: null,
+      camera: null,
+      renderer: null,
+      animationId: null,
 
-                const pLight = new THREE.PointLight(0xff2d55, 6, 80);
-                pLight.position.set(0, 20, 10);
-                this.scene.add(pLight);
-                this.scene.add(new THREE.AmbientLight(0x222222));
-            },
+      player: null,
+      laneLines: [],
+      obstacles: [],
+      buildings: [],
 
-            setupWorld() {
-                // Дорога
-                const grid = new THREE.GridHelper(200, 100, 0xff2d55, 0x111111);
-                this.scene.add(grid);
+      isRunning: false,
+      isSkating: false,
+      isCrashed: false,
 
-                this.updateLanes();
-                this.createInterceptor();
-                
-                for(let i=0; i<60; i++) this.spawnStructure(i * 10 - 100);
+      score: 0,
+      speed: 0.5,
+      laneCount: 3,
+      targetLane: 1,
 
-                // Изначальное положение камеры
-                this.camera.position.set(0, 5, 14);
-                this.camera.lookAt(0, 1, 0);
-            },
+      crashCount: 0,
+      cooldownEnd: 0,
 
-            /**
-             * ФИКС БАГА ПОЛОС: Динамическая разметка
-             */
-            updateLanes() {
-                this.laneLines.forEach(l => this.scene.remove(l));
-                this.laneLines = [];
+      bestScore: 0,
+      totalDist: 0,
 
-                const mat = new THREE.MeshBasicMaterial({ color: 0x007aff, transparent: true, opacity: 0.4 });
-                const geo = new THREE.PlaneGeometry(0.05, 100);
+      laneSpacing: 3.5,
 
-                for(let i = 1; i < this.laneCount; i++) {
-                    const line = new THREE.Mesh(geo, mat);
-                    line.rotation.x = -Math.PI / 2;
-                    // Математически точный расчет центрирования
-                    const xPos = (i - this.laneCount / 2) * 3.5;
-                    line.position.set(xPos, 0.05, 0);
-                    this.scene.add(line);
-                    this.laneLines.push(line);
-                }
-            },
+      init() {
+        this.loadStats();
+        this.updateStatsUI();
 
-            createInterceptor() {
-                const group = new THREE.Group();
-                
-                // Сложная геометрия персонажа (Interceptor V.7)
-                const core = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.6, 0.2, 1.2),
-                    new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true })
-                );
-                group.add(core);
+        document.getElementById('menuScreen').style.display = 'none';
+        document.getElementById('deathScreen').style.display = 'none';
 
-                const wings = new THREE.Mesh(
-                    new THREE.BoxGeometry(1.8, 0.05, 0.5),
-                    new THREE.MeshBasicMaterial({ color: 0x007aff })
-                );
-                wings.position.set(0, -0.1, 0.2);
-                group.add(wings);
+        this.resetState();
+        this.setupGraphics();
+        this.setupWorld();
+        this.setupControls();
 
-                this.player = group;
-                this.player.position.set(0, 1.0, 6.5);
-                this.scene.add(this.player);
-            },
+        this.isRunning = true;
+        this.animate();
+      },
 
-            spawnStructure(z) {
-                const h = 5 + Math.random() * 25;
-                const building = new THREE.Mesh(
-                    new THREE.BoxGeometry(4, h, 4),
-                    new THREE.MeshPhongMaterial({ color: 0x080808, wireframe: Math.random() > 0.4 })
-                );
-                building.position.set(Math.random() > 0.5 ? 20 : -20, h/2, z);
-                this.scene.add(building);
-                this.buildings.push(building);
-            },
+      resetState() {
+        this.score = 0;
+        this.speed = 0.5;
+        this.laneCount = 3;
+        this.targetLane = 1;
+        this.isSkating = false;
+        this.isCrashed = false;
+        this.crashCount = 0;
+        this.cooldownEnd = 0;
+        this.obstacles = [];
+        this.buildings = [];
+        this.laneLines = [];
 
-            setupControls() {
-                window.addEventListener('touchstart', (e) => {
-                    const touchX = e.touches[0].clientX;
-                    const sector = window.innerWidth / this.laneCount;
-                    this.targetLane = Math.floor(touchX / sector);
-                });
+        document.getElementById('scoreTxt').innerText = '000000';
+        document.getElementById('timerTxt').innerText = '';
+        document.getElementById('statusTxt').innerText = 'STATUS: STABLE';
+        document.getElementById('skateBtn').classList.remove('active');
+      },
 
-                document.getElementById('skateBtn').addEventListener('touchstart', (e) => {
-                    e.stopPropagation();
-                    if (this.isCrashed) return;
-                    this.isSkating = !this.isSkating;
-                    document.getElementById('skateBtn').classList.toggle('active', this.isSkating);
-                });
-            },
+      loadStats() {
+        this.bestScore = Number(localStorage.getItem('ansa_run_best') || 0);
+        this.totalDist = Number(localStorage.getItem('ansa_run_total') || 0);
+      },
 
-            spawnObstacle() {
-                const lane = Math.floor(Math.random() * this.laneCount);
-                const box = new THREE.Mesh(
-                    new THREE.BoxGeometry(1.3, 1.3, 1.3),
-                    new THREE.MeshPhongMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 0.8 })
-                );
-                const xPos = (lane - (this.laneCount - 1) / 2) * 3.5;
-                box.position.set(xPos, 0.7, -65);
-                this.scene.add(box);
-                this.obstacles.push(box);
-            },
+      saveStats() {
+        localStorage.setItem('ansa_run_best', String(Math.floor(this.bestScore)));
+        localStorage.setItem('ansa_run_total', String(Math.floor(this.totalDist)));
+      },
 
-            animate() {
-                if (!this.isRunning) return;
-                requestAnimationFrame(() => this.animate());
+      updateStatsUI() {
+        document.getElementById('bestScore').innerText = Math.floor(this.bestScore);
+        document.getElementById('totalDist').innerText = Math.floor(this.totalDist);
+      },
 
-                // АДАПТИВНОСТЬ КАМЕРЫ (Чтобы не уходило за экран)
-                if (this.score > 200 && this.laneCount < 4) { this.laneCount = 4; this.updateLanes(); this.adjustCamera(4); }
-                if (this.score > 700 && this.laneCount < 5) { this.laneCount = 5; this.updateLanes(); this.adjustCamera(5); }
-                if (this.score > 1500 && this.laneCount < 6) { this.laneCount = 6; this.updateLanes(); this.adjustCamera(6); }
+      setupGraphics() {
+        this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.Fog(0x000000, 20, 55);
 
-                const frameSpeed = this.isSkating ? this.speed * 1.25 : this.speed;
-                this.score += frameSpeed;
-                this.speed += 0.00015;
+        this.camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
 
-                document.getElementById('scoreTxt').innerText = Math.floor(this.score).toString().padStart(6, '0');
+        this.renderer = new THREE.WebGLRenderer({
+          canvas: document.getElementById('stage'),
+          antialias: true,
+          powerPreference: 'high-performance'
+        });
 
-                // Плавное центрирование и наклон
-                const targetX = (this.targetLane - (this.laneCount - 1) / 2) * 3.5;
-                this.player.position.x += (targetX - this.player.position.x) * 0.16;
-                this.player.rotation.z = (this.player.position.x - targetX) * 0.45;
-                this.player.rotation.y += 0.03;
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-                // Обработка аварий
-                if (this.isCrashed) {
-                    const rem = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
-                    if (rem > 0) document.getElementById('timerTxt').innerText = rem + "S";
-                    else { this.isCrashed = false; document.getElementById('timerTxt').innerText = ""; }
-                }
+        const pLight = new THREE.PointLight(0xff2d55, 6, 80);
+        pLight.position.set(0, 20, 10);
+        this.scene.add(pLight);
+        this.scene.add(new THREE.AmbientLight(0x222222));
+      },
 
-                // Логика объектов
-                if (Math.random() < 0.03 + (this.score / 60000)) this.spawnObstacle();
+      setupWorld() {
+        const grid = new THREE.GridHelper(220, 110, 0xff2d55, 0x111111);
+        this.scene.add(grid);
 
-                for (let i = this.obstacles.length - 1; i >= 0; i--) {
-                    const o = this.obstacles[i];
-                    o.position.z += frameSpeed * 3.5;
+        this.updateLanes();
+        this.createInterceptor();
 
-                    if (this.player.position.distanceTo(o.position) < 1.2) {
-                        if (this.isSkating) {
-                            this.handleImpact();
-                            this.scene.remove(o);
-                            this.obstacles.splice(i, 1);
-                        } else {
-                            this.gameOver();
-                        }
-                    }
-                    if (o.position.z > 20) { this.scene.remove(o); this.obstacles.splice(i, 1); }
-                }
+        for (let i = 0; i < 60; i++) {
+          this.spawnStructure(i * 10 - 100);
+        }
 
-                // Город и разметка
-                this.buildings.forEach(b => {
-                    b.position.z += frameSpeed * 2;
-                    if (b.position.z > 30) b.position.z = -140;
-                });
+        this.camera.position.set(0, 5, 14);
+        this.camera.lookAt(0, 1, 0);
+      },
 
-                this.renderer.render(this.scene, this.camera);
-            },
+      updateLanes() {
+        this.laneLines.forEach(line => this.scene.remove(line));
+        this.laneLines = [];
 
-            adjustCamera(n) {
-                // Плавное отдаление камеры при увеличении полос
-                this.camera.position.z = 14 + (n - 3) * 1.5;
-                this.camera.position.y = 5 + (n - 3) * 0.5;
-                this.camera.fov = 75 + (n - 3) * 2;
-                this.camera.updateProjectionMatrix();
-            },
+        const mat = new THREE.MeshBasicMaterial({
+          color: 0x007aff,
+          transparent: true,
+          opacity: 0.4
+        });
 
-            handleImpact() {
-                this.isSkating = false;
-                this.isCrashed = true;
-                this.crashCount++;
-                this.cooldownEnd = Date.now() + (this.crashCount * 5000);
-                document.getElementById('skateBtn').classList.remove('active');
-            },
+        const geo = new THREE.PlaneGeometry(0.05, 120);
 
-            gameOver() {
-                this.isRunning = false;
-                document.getElementById('deathScreen').style.display = 'flex';
-                document.getElementById('finalScore').innerText = Math.floor(this.score);
+        for (let i = 1; i < this.laneCount; i++) {
+          const line = new THREE.Mesh(geo, mat);
+          line.rotation.x = -Math.PI / 2;
+          const xPos = (i - this.laneCount / 2) * this.laneSpacing;
+          line.position.set(xPos, 0.05, 0);
+          this.scene.add(line);
+          this.laneLines.push(line);
+        }
+      },
+
+      createInterceptor() {
+        const group = new THREE.Group();
+
+        const core = new THREE.Mesh(
+          new THREE.BoxGeometry(0.6, 0.2, 1.2),
+          new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true })
+        );
+        group.add(core);
+
+        const wings = new THREE.Mesh(
+          new THREE.BoxGeometry(1.8, 0.05, 0.5),
+          new THREE.MeshBasicMaterial({ color: 0x007aff })
+        );
+        wings.position.set(0, -0.1, 0.2);
+        group.add(wings);
+
+        this.player = group;
+        this.player.position.set(0, 1.0, 6.5);
+        this.scene.add(this.player);
+      },
+
+      spawnStructure(z) {
+        const h = 5 + Math.random() * 25;
+        const building = new THREE.Mesh(
+          new THREE.BoxGeometry(4, h, 4),
+          new THREE.MeshPhongMaterial({
+            color: 0x080808,
+            wireframe: Math.random() > 0.4
+          })
+        );
+
+        building.position.set(Math.random() > 0.5 ? 20 : -20, h / 2, z);
+        this.scene.add(building);
+        this.buildings.push(building);
+      },
+
+      setupControls() {
+        if (!this._eventsBound) {
+          window.addEventListener('resize', this.handleResize.bind(this));
+
+          window.addEventListener('touchstart', (e) => {
+            const skateBtn = document.getElementById('skateBtn');
+            if (skateBtn.contains(e.target)) return;
+
+            const touchX = e.touches[0].clientX;
+            const sector = window.innerWidth / this.laneCount;
+            this.targetLane = this.clamp(Math.floor(touchX / sector), 0, this.laneCount - 1);
+          }, { passive: true });
+
+          window.addEventListener('keydown', (e) => {
+            if (!this.isRunning) return;
+
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+              this.targetLane = this.clamp(this.targetLane - 1, 0, this.laneCount - 1);
             }
-        };
-    </script>
+
+            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+              this.targetLane = this.clamp(this.targetLane + 1, 0, this.laneCount - 1);
+            }
+
+            if (e.code === 'Space') {
+              e.preventDefault();
+              if (!this.isCrashed) {
+                this.isSkating = !this.isSkating;
+                document.getElementById('skateBtn').classList.toggle('active', this.isSkating);
+              }
+            }
+          });
+
+          document.getElementById('skateBtn').addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            if (this.isCrashed || !this.isRunning) return;
+            this.isSkating = !this.isSkating;
+            document.getElementById('skateBtn').classList.toggle('active', this.isSkating);
+          });
+
+          document.getElementById('skateBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (this.isCrashed || !this.isRunning) return;
+            this.isSkating = !this.isSkating;
+            document.getElementById('skateBtn').classList.toggle('active', this.isSkating);
+          });
+
+          this._eventsBound = true;
+        }
+      },
+
+      handleResize() {
+        if (!this.camera || !this.renderer) return;
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      },
+
+      clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      },
+
+      spawnObstacle() {
+        const lane = Math.floor(Math.random() * this.laneCount);
+        const box = new THREE.Mesh(
+          new THREE.BoxGeometry(1.3, 1.3, 1.3),
+          new THREE.MeshPhongMaterial({
+            color: 0xff2d55,
+            emissive: 0xff2d55,
+            emissiveIntensity: 0.8
+          })
+        );
+
+        const xPos = (lane - (this.laneCount - 1) / 2) * this.laneSpacing;
+        box.position.set(xPos, 0.7, -65);
+        this.scene.add(box);
+        this.obstacles.push(box);
+      },
+
+      adjustCamera(n) {
+        this.camera.position.z = 14 + (n - 3) * 1.5;
+        this.camera.position.y = 5 + (n - 3) * 0.5;
+        this.camera.fov = 75 + (n - 3) * 2;
+        this.camera.updateProjectionMatrix();
+      },
+
+      handleImpact() {
+        this.isSkating = false;
+        this.isCrashed = true;
+        this.crashCount++;
+        this.cooldownEnd = Date.now() + (this.crashCount * 5000);
+
+        document.getElementById('skateBtn').classList.remove('active');
+        document.getElementById('statusTxt').innerText = 'STATUS: COOLDOWN';
+      },
+
+      gameOver() {
+        this.isRunning = false;
+        cancelAnimationFrame(this.animationId);
+
+        const final = Math.floor(this.score);
+        this.totalDist += final;
+        this.bestScore = Math.max(this.bestScore, final);
+        this.saveStats();
+        this.updateStatsUI();
+
+        document.getElementById('finalScore').innerText = final;
+        document.getElementById('statusTxt').innerText = 'STATUS: FATAL';
+        document.getElementById('deathScreen').style.display = 'flex';
+      },
+
+      restart() {
+        document.getElementById('deathScreen').style.display = 'none';
+
+        if (this.renderer) {
+          this.renderer.dispose();
+        }
+
+        const canvas = document.getElementById('stage');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        }
+
+        this.init();
+      },
+
+      animate() {
+        if (!this.isRunning) return;
+
+        this.animationId = requestAnimationFrame(() => this.animate());
+
+        if (this.score > 200 && this.laneCount < 4) {
+          this.laneCount = 4;
+          this.targetLane = this.clamp(this.targetLane, 0, this.laneCount - 1);
+          this.updateLanes();
+          this.adjustCamera(4);
+        }
+
+        if (this.score > 700 && this.laneCount < 5) {
+          this.laneCount = 5;
+          this.targetLane = this.clamp(this.targetLane, 0, this.laneCount - 1);
+          this.updateLanes();
+          this.adjustCamera(5);
+        }
+
+        if (this.score > 1500 && this.laneCount < 6) {
+          this.laneCount = 6;
+          this.targetLane = this.clamp(this.targetLane, 0, this.laneCount - 1);
+          this.updateLanes();
+          this.adjustCamera(6);
+        }
+
+        const frameSpeed = this.isSkating ? this.speed * 1.25 : this.speed;
+        this.score += frameSpeed;
+        this.speed += 0.00015;
+
+        document.getElementById('scoreTxt').innerText = Math.floor(this.score).toString().padStart(6, '0');
+
+        const targetX = (this.targetLane - (this.laneCount - 1) / 2) * this.laneSpacing;
+        this.player.position.x += (targetX - this.player.position.x) * 0.16;
+        this.player.rotation.z = (this.player.position.x - targetX) * 0.45;
+        this.player.rotation.y += 0.03;
+
+        if (this.isCrashed) {
+          const rem = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
+          if (rem > 0) {
+            document.getElementById('timerTxt').innerText = rem + 'S';
+          } else {
+            this.isCrashed = false;
+            document.getElementById('timerTxt').innerText = '';
+            document.getElementById('statusTxt').innerText = 'STATUS: STABLE';
+          }
+        }
+
+        if (Math.random() < 0.03 + (this.score / 60000)) {
+          this.spawnObstacle();
+        }
+
+        for (let i = this.obstacles.length - 1; i >= 0; i--) {
+          const o = this.obstacles[i];
+          o.position.z += frameSpeed * 3.5;
+          o.rotation.x += 0.02;
+          o.rotation.y += 0.03;
+
+          const closeX = Math.abs(this.player.position.x - o.position.x) < 0.9;
+          const closeZ = Math.abs(this.player.position.z - o.position.z) < 0.9;
+
+          if (closeX && closeZ) {
+            if (this.isSkating) {
+              this.handleImpact();
+              this.scene.remove(o);
+              this.obstacles.splice(i, 1);
+            } else {
+              this.gameOver();
+              return;
+            }
+          }
+
+          if (o.position.z > 20) {
+            this.scene.remove(o);
+            this.obstacles.splice(i, 1);
+          }
+        }
+
+        this.buildings.forEach((b) => {
+          b.position.z += frameSpeed * 2;
+          if (b.position.z > 30) b.position.z = -140;
+        });
+
+        this.renderer.render(this.scene, this.camera);
+      }
+    };
+
+    Engine.loadStats();
+    Engine.updateStatsUI();
+  </script>
 </body>
 </html>

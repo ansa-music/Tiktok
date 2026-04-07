@@ -155,69 +155,62 @@
 
     <script>
         const searchInput = document.getElementById('searchInput');
-        const feed = document.getElementById('feed');
-        const scanner = document.getElementById('scanner-overlay');
+const feed = document.getElementById('feed');
+const scanner = document.getElementById('scanner-overlay');
 
-        // Реальный поиск через бесплатный API картинок (Unsplash/Bing Simulation)
-        async function fetchSneakers(query) {
-            scanner.style.display = 'flex';
-            feed.innerHTML = '';
+// Функция для красивого вывода тенге (например: 125 000 ₸)
+function formatKZT(amount) {
+    return amount.toLocaleString('ru-RU') + ' ₸';
+}
+
+async function fetchSneakers(query) {
+    scanner.style.display = 'flex';
+    feed.innerHTML = '';
+    
+    try {
+        // Цены в тенге (примерные для топовых моделей в РК)
+        const mockPrices = [45000, 65000, 85000, 125000, 280000, 550000];
+        const models = ['Retro High', 'Special Edition', 'Urban Runner', 'Neural Tech', 'Cloud Flow'];
+        
+        setTimeout(() => {
+            scanner.style.display = 'none';
             
-            try {
-                // Имитируем запрос к ИИ-базе данных
-                // В реальности мы используем поиск по картинкам Google/Unsplash через прокси
-                const mockPrices = ['$120', '$190', '$250', '$450', '$1,200'];
-                const models = ['Retro High', 'Legacy Edition', 'Cloud Walker', 'Neural Runner', 'Shadow 2.0'];
+            for(let i = 0; i < 6; i++) {
+                const card = document.createElement('div');
+                card.className = 'kick-card';
                 
-                setTimeout(() => {
-                    scanner.style.display = 'none';
-                    
-                    for(let i = 0; i < 6; i++) {
-                        const card = document.createElement('div');
-                        card.className = 'kick-card';
-                        
-                        // Генерируем "умную" ссылку на фото кроссовок
-                        const imgUrl = `https://source.unsplash.com/800x800/?sneakers,${query},${i}`;
-                        const price = mockPrices[Math.floor(Math.random() * mockPrices.length)];
-                        const model = `${query.toUpperCase()} ${models[i % models.length]}`;
+                // Используем более надежный сервис для картинок (LoremFlickr + ключевые слова)
+                const imgUrl = `https://loremflickr.com/800/800/sneakers,${query}/all?lock=${i}`;
+                const price = formatKZT(mockPrices[Math.floor(Math.random() * mockPrices.length)]);
+                const model = `${query.toUpperCase()} ${models[i % models.length]}`;
 
-                        card.innerHTML = `
-                            <div class="img-container">
-                                <img src="${imgUrl}" alt="sneaker" onerror="this.src='https://via.placeholder.com/400x400/111/fff?text=NO_IMAGE'">
-                            </div>
-                            <div class="kick-info">
-                                <div class="kick-name">${model}</div>
-                                <div class="kick-meta">
-                                    <span>2027_EDITION</span>
-                                    <span class="price">${price}</span>
-                                </div>
-                            </div>
-                        `;
-                        feed.appendChild(card);
-                    }
-                }, 1500);
-            } catch (e) {
-                alert('Система перегружена. Попробуйте позже.');
-                scanner.style.display = 'none';
+                card.innerHTML = `
+                    <div class="img-container">
+                        <img src="${imgUrl}" alt="sneaker" onload="this.style.opacity='1'" style="opacity:0; transition: opacity 0.5s;">
+                    </div>
+                    <div class="kick-info">
+                        <div class="kick-name">${model}</div>
+                        <div class="kick-meta">
+                            <span>ALMATY_STOCK</span>
+                            <span class="price">${price}</span>
+                        </div>
+                    </div>
+                `;
+                feed.appendChild(card);
             }
-        }
+        }, 1500);
+    } catch (e) {
+        console.error('Ошибка нейросети:', e);
+        scanner.style.display = 'none';
+    }
+}
 
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                fetchSneakers(searchInput.value);
-            }
-        });
+searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        fetchSneakers(searchInput.value);
+    }
+});
 
-        // Добавляем эффект параллакса для картинок при наклоне телефона
-        window.addEventListener('deviceorientation', (event) => {
-            const imgs = document.querySelectorAll('.kick-card img');
-            const x = event.beta / 10; 
-            const y = event.gamma / 10;
-            
-            imgs.forEach(img => {
-                img.style.transform = `translate3d(${y}px, ${x}px, 0) rotate(${y/2}deg)`;
-            });
-        });
     </script>
 </body>
 </html>

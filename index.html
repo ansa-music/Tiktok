@@ -2,211 +2,412 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ANSA_RUN_2027</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ANSA_RUN // PROTOCOL_2027</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #ff2d55; --bg: #050505; }
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; overflow: hidden; touch-action: none; }
-        
-        canvas { display: block; }
-
-        /* Интерфейс поверх игры */
-        .ui { position: fixed; top: 0; left: 0; width: 100%; padding: 40px 20px; pointer-events: none; }
-        .score { font-family: 'Orbitron', sans-serif; font-size: 20px; color: var(--accent); }
-        .highscore { font-size: 12px; opacity: 0.5; }
-
-        /* Кнопка активации скейта (удобно под палец) */
-        .skate-btn {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-            width: 80px; height: 80px; background: rgba(255,255,255,0.05);
-            border: 2px solid var(--accent); border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 24px; z-index: 100; transition: 0.2s;
+        /* --- CSS ARCHITECTURE --- */
+        :root {
+            --accent: #ff2d55;
+            --tech-blue: #007aff;
+            --bg: #030303;
+            --glass: rgba(255, 255, 255, 0.05);
         }
-        .skate-btn.active { background: var(--accent); box-shadow: 0 0 30px var(--accent); }
-        .skate-btn.cooldown { opacity: 0.2; border-color: #333; }
 
-        #cooldown-timer { position: absolute; top: -30px; font-size: 12px; color: var(--accent); font-weight: bold; }
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none;
+        }
 
-        .game-over {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200;
+        body { 
+            background: var(--bg); 
+            color: #fff; 
+            font-family: 'JetBrains Mono', monospace; 
+            overflow: hidden; 
+            touch-action: none;
+        }
+
+        /* Эффект CRT (Электронно-лучевой трубки) */
+        .crt-overlay {
+            position: fixed; inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none; z-index: 500;
+        }
+
+        canvas { display: block; filter: contrast(1.2) saturate(1.1); }
+
+        /* HUD (Интерфейс) */
+        .hud {
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: 50px 25px; pointer-events: none;
+            display: flex; justify-content: space-between;
+            z-index: 100;
+        }
+
+        .stats-box { border-left: 2px solid var(--accent); padding-left: 15px; }
+        .score-val { font-family: 'Orbitron', sans-serif; font-size: 24px; color: var(--accent); text-shadow: 0 0 10px var(--accent); }
+        .label { font-size: 9px; letter-spacing: 3px; color: #555; text-transform: uppercase; }
+
+        /* Skate Controller */
+        .controls {
+            position: fixed; bottom: 50px; width: 100%;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100;
+        }
+
+        .skate-trigger {
+            width: 90px; height: 90px;
+            background: var(--glass);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            backdrop-filter: blur(10px);
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: all;
+        }
+
+        .skate-trigger.active { 
+            border-color: var(--accent); 
+            background: rgba(255, 45, 85, 0.2);
+            box-shadow: 0 0 40px rgba(255, 45, 85, 0.4);
+            transform: scale(1.1);
+        }
+
+        .skate-trigger.disabled { opacity: 0.1; transform: scale(0.8); }
+
+        /* Modal Screens */
+        .screen {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 1000; text-align: center;
+        }
+
+        .btn-reboot {
+            margin-top: 30px; background: none; border: 1px solid var(--accent);
+            color: var(--accent); padding: 15px 40px; font-family: 'Orbitron';
+            font-size: 0.8rem; letter-spacing: 2px; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div class="ui">
-        <div class="score" id="scoreDisplay">SCORE: 0</div>
-        <div class="highscore" id="bestDisplay">BEST: 0</div>
+    <div class="crt-overlay"></div>
+
+    <div class="hud">
+        <div class="stats-box">
+            <div class="label">Neural Score</div>
+            <div id="score" class="score-val">000000</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="label">System Status</div>
+            <div id="status" style="font-size: 10px; color: var(--tech-blue);">STABLE_V.27</div>
+        </div>
     </div>
 
-    <div class="skate-btn" id="skateBtn">
-        <span id="cooldown-timer"></span>
-        🛹
+    <div class="controls">
+        <div id="skateBtn" class="skate-trigger">
+            <span style="font-size: 24px;">🛹</span>
+            <span id="timer" style="font-size: 10px; font-weight: bold; margin-top: 5px;"></span>
+        </div>
     </div>
 
-    <div class="game-over" id="gameOverScreen">
-        <h1 style="font-family:'Orbitron'; color:var(--accent); margin-bottom:20px;">SYSTEM_CRASHED</h1>
-        <p id="finalScore" style="margin-bottom:40px;"></p>
-        <button onclick="location.reload()" style="background:var(--accent); border:none; color:#fff; padding:15px 40px; border-radius:10px; font-weight:bold;">REBOOT_SYSTEM</button>
+    <div id="deathScreen" class="screen" style="display: none;">
+        <h1 style="font-family: 'Orbitron'; font-size: 2rem; color: var(--accent); margin-bottom: 10px;">PROTOCOL_ERROR</h1>
+        <p style="color: #444; font-size: 0.7rem; letter-spacing: 5px;">CRITICAL_CRASH_DETECTED</p>
+        <div style="margin: 40px 0;">
+            <div class="label">Final Distance</div>
+            <div id="finalScore" class="score-val">0</div>
+        </div>
+        <button class="btn-reboot" onclick="location.reload()">REBOOT_SYSTEM</button>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <canvas id="stage"></canvas>
+
+    <audio id="bgm" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
+        /**
+         * ANSA_RUN // ENGINE V.2.0
+         * Личный кабинет, Рекорды, Физика, Эффекты
+         */
+
+        const canvas = document.getElementById('stage');
         const ctx = canvas.getContext('2d');
-        const skateBtn = document.getElementById('skateBtn');
-        const cooldownTxt = document.getElementById('cooldown-timer');
+        const bgm = document.getElementById('bgm');
+        
+        // Настройка разрешения
+        function resize() {
+            canvas.width = window.innerWidth * window.devicePixelRatio;
+            canvas.height = window.innerHeight * window.devicePixelRatio;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-        // Настройки экрана
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        // Состояние
-        let score = 0;
-        let highScore = localStorage.getItem('ansa_best') || 0;
-        document.getElementById('bestDisplay').innerText = `BEST: ${Math.floor(highScore)}`;
-
-        let speed = 5;
-        let isSkating = false;
-        let crashCount = 0;
-        let cooldownEnd = 0;
-        let isGameOver = false;
-
-        // Персонаж
-        const player = {
-            lane: 1, // 0, 1, 2
-            x: canvas.width / 2,
-            targetX: canvas.width / 2,
-            y: canvas.height - 150
+        // --- ГЛОБАЛЬНЫЕ КОНСТАНТЫ ---
+        const CONFIG = {
+            ACCENT: '#ff2d55',
+            TECH_BLUE: '#007aff',
+            BASE_SPEED: 6,
+            SKATE_MULTIPLIER: 1.25, // Увеличение скорости на 1.25
+            LANE_WIDTH: window.innerWidth / 3,
+            CRASH_PENALTY: 5000 // Базовый штраф 5 сек
         };
 
-        const obstacles = [];
+        // --- ИГРОВОЕ СОСТОЯНИЕ ---
+        let state = {
+            score: 0,
+            highScore: localStorage.getItem('ansa_high_score') || 0,
+            speed: CONFIG.BASE_SPEED,
+            isSkating: false,
+            isCrashed: false,
+            crashCount: 0,
+            cooldownEnd: 0,
+            isGameOver: false,
+            lastSpawn: 0,
+            particles: [],
+            obstacles: []
+        };
 
-        // Управление тапами
+        const player = {
+            lane: 1,
+            x: window.innerWidth / 2,
+            targetX: window.innerWidth / 2,
+            y: window.innerHeight - 180,
+            w: 40,
+            h: 60
+        };
+
+        // --- СИСТЕМА ЧАСТИЦ (Visual FX) ---
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 10;
+                this.vy = (Math.random() - 0.5) * 10;
+                this.alpha = 1;
+                this.color = color;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= 0.02;
+            }
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, 3, 3);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // --- ОБЪЕКТЫ ПРЕПЯТСТВИЙ ---
+        class Obstacle {
+            constructor() {
+                this.lane = Math.floor(Math.random() * 3);
+                this.x = (this.lane * CONFIG.LANE_WIDTH) + (CONFIG.LANE_WIDTH / 2);
+                this.y = -100;
+                this.w = 60;
+                this.h = 60;
+            }
+            update(currentSpeed) {
+                this.y += currentSpeed;
+            }
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = CONFIG.ACCENT;
+                ctx.strokeStyle = CONFIG.ACCENT;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x - this.w/2, this.y - this.h/2, this.w, this.h);
+                
+                // Детализация препятствия
+                ctx.beginPath();
+                ctx.moveTo(this.x - 10, this.y - 10);
+                ctx.lineTo(this.x + 10, this.y + 10);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // --- УПРАВЛЕНИЕ ---
         window.addEventListener('touchstart', (e) => {
-            if (isGameOver) return;
+            if (state.isGameOver) return;
+            bgm.play(); // Активация звука первым касанием
+            
             const touchX = e.touches[0].clientX;
-            if (touchX < canvas.width / 2) {
+            if (touchX < window.innerWidth / 2) {
                 if (player.lane > 0) player.lane--;
             } else {
                 if (player.lane < 2) player.lane++;
             }
-            player.targetX = (canvas.width / 4) * (player.lane + 1);
+            player.targetX = (player.lane * CONFIG.LANE_WIDTH) + (CONFIG.LANE_WIDTH / 2);
         });
 
-        // Кнопка скейта
+        const skateBtn = document.getElementById('skateBtn');
         skateBtn.addEventListener('touchstart', (e) => {
             e.stopPropagation();
-            if (Date.now() < cooldownEnd) return;
-            isSkating = !isSkating;
-            skateBtn.classList.toggle('active', isSkating);
+            if (state.isCrashed) return;
+            state.isSkating = !state.isSkating;
+            skateBtn.classList.toggle('active', state.isSkating);
         });
 
-        function spawnObstacle() {
-            const lane = Math.floor(Math.random() * 3);
-            obstacles.push({
-                x: (canvas.width / 4) * (lane + 1),
-                y: -100
-            });
-        }
-
-        setInterval(spawnObstacle, 1000);
-
+        // --- ГЛАВНЫЙ ЦИКЛ ОБНОВЛЕНИЯ (The Engine) ---
         function update() {
-            if (isGameOver) return;
+            if (state.isGameOver) return;
 
-            // Логика кулдауна
-            if (Date.now() < cooldownEnd) {
-                isSkating = false;
-                skateBtn.classList.add('cooldown');
-                skateBtn.classList.remove('active');
-                cooldownTxt.innerText = Math.ceil((cooldownEnd - Date.now()) / 1000) + "s";
-            } else {
-                skateBtn.classList.remove('cooldown');
-                cooldownTxt.innerText = "";
+            // Расчет текущей скорости
+            const currentSpeed = state.isSkating ? state.speed * CONFIG.SKATE_MULTIPLIER : state.speed;
+            state.speed += 0.0005; // Постепенное усложнение
+            state.score += currentSpeed / 10;
+
+            // Обработка штрафа
+            if (state.isCrashed) {
+                const now = Date.now();
+                if (now < state.cooldownEnd) {
+                    const remaining = Math.ceil((state.cooldownEnd - now) / 1000);
+                    document.getElementById('timer').innerText = remaining + 'S';
+                    skateBtn.classList.add('disabled');
+                } else {
+                    state.isCrashed = false;
+                    document.getElementById('timer').innerText = '';
+                    skateBtn.classList.remove('disabled');
+                    document.getElementById('status').innerText = 'STABLE_V.27';
+                    document.getElementById('status').style.color = CONFIG.TECH_BLUE;
+                }
             }
 
-            let currentSpeed = isSkating ? speed * 1.25 : speed;
-            score += currentSpeed / 60;
-            speed += 0.001;
+            // Плавное перемещение игрока
+            player.x += (player.targetX - player.x) * 0.15;
 
-            document.getElementById('scoreDisplay').innerText = `SCORE: ${Math.floor(score)}`;
+            // Генерация препятствий
+            if (Date.now() - state.lastSpawn > 1200 - (state.speed * 20)) {
+                state.obstacles.push(new Obstacle());
+                state.lastSpawn = Date.now();
+            }
 
-            // Плавное движение игрока
-            player.x += (player.targetX - player.x) * 0.2;
+            // Обновление частиц
+            state.particles.forEach((p, index) => {
+                p.update();
+                if (p.alpha <= 0) state.particles.splice(index, 1);
+            });
 
-            // Движение препятствий
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                obstacles[i].y += currentSpeed;
-
-                // Коллизия
-                if (Math.abs(player.x - obstacles[i].x) < 40 && Math.abs(player.y - obstacles[i].y) < 40) {
-                    if (isSkating) {
-                        isSkating = false;
-                        crashCount++;
-                        cooldownEnd = Date.now() + (crashCount * 5000);
-                        obstacles.splice(i, 1);
+            // Обновление препятствий и Коллизии
+            state.obstacles.forEach((obj, index) => {
+                obj.update(currentSpeed);
+                
+                // Проверка столкновения
+                const dx = Math.abs(player.x - obj.x);
+                const dy = Math.abs(player.y - obj.y);
+                
+                if (dx < 40 && dy < 50) {
+                    if (state.isSkating) {
+                        handleSkateCrash();
+                        state.obstacles.splice(index, 1);
                     } else {
-                        endGame();
+                        handleGameOver();
                     }
                 }
 
-                if (obstacles[i] && obstacles[i].y > canvas.height) obstacles.splice(i, 1);
-            }
+                if (obj.y > window.innerHeight + 100) state.obstacles.splice(index, 1);
+            });
 
+            document.getElementById('score').innerText = Math.floor(state.score).toString().padStart(6, '0');
+            
             draw();
             requestAnimationFrame(update);
         }
 
-        function draw() {
-            ctx.fillStyle = '#050505';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // --- ЛОГИКА АВАРИЙ ---
+        function handleSkateCrash() {
+            state.isSkating = false;
+            state.isCrashed = true;
+            state.crashCount++;
+            
+            // Расчет времени по формуле: 5с, 10с, 15с...
+            const penaltyTime = state.crashCount * CONFIG.CRASH_PENALTY;
+            state.cooldownEnd = Date.now() + penaltyTime;
+            
+            skateBtn.classList.remove('active');
+            document.getElementById('status').innerText = 'SKATE_FAILURE';
+            document.getElementById('status').style.color = CONFIG.ACCENT;
 
-            // Дороги
-            ctx.strokeStyle = '#111';
-            for (let i = 1; i <= 3; i++) {
+            // Эффект взрыва частиц
+            for(let i=0; i<20; i++) state.particles.push(new Particle(player.x, player.y, CONFIG.ACCENT));
+        }
+
+        function handleGameOver() {
+            state.isGameOver = true;
+            document.getElementById('deathScreen').style.display = 'flex';
+            document.getElementById('finalScore').innerText = Math.floor(state.score);
+            
+            // Сохранение рекорда в "Личный кабинет"
+            if (state.score > state.highScore) {
+                localStorage.setItem('ansa_high_score', state.score);
+            }
+
+            // Глитч эффект на прощание
+            ctx.fillStyle = CONFIG.ACCENT;
+            ctx.fillRect(0,0, canvas.width, canvas.height);
+        }
+
+        // --- РЕНДЕРИНГ (The Visuals) ---
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Отрисовка кибер-дороги (Сетка)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for(let i=1; i<3; i++) {
                 ctx.beginPath();
-                ctx.moveTo((canvas.width / 4) * i, 0);
-                ctx.lineTo((canvas.width / 4) * i, canvas.height);
+                ctx.moveTo(i * CONFIG.LANE_WIDTH, 0);
+                ctx.lineTo(i * CONFIG.LANE_WIDTH, window.innerHeight);
                 ctx.stroke();
             }
 
-            // Препятствия (кубы)
-            ctx.fillStyle = '#ff2d55';
-            obstacles.forEach(o => {
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#ff2d55';
-                ctx.fillRect(o.x - 20, o.y - 20, 40, 40);
-                ctx.shadowBlur = 0;
-            });
+            // Отрисовка персонажа
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            
+            // Свечение скейта
+            if (state.isSkating) {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = CONFIG.ACCENT;
+                ctx.fillStyle = CONFIG.ACCENT;
+                ctx.fillRect(-25, 25, 50, 6);
+                
+                // Искры под скейтом
+                if (Math.random() > 0.5) {
+                    state.particles.push(new Particle(player.x + (Math.random()-0.5)*40, player.y + 30, '#fff'));
+                }
+            }
 
-            // Игрок
+            // Тело персонажа (Стиль 2027)
             ctx.fillStyle = '#fff';
+            ctx.shadowBlur = 0;
             ctx.beginPath();
-            ctx.arc(player.x, player.y, 20, 0, Math.PI * 2);
+            ctx.roundRect(-15, -20, 30, 45, 10);
             ctx.fill();
+            
+            // Шлем/Голова
+            ctx.fillStyle = CONFIG.TECH_BLUE;
+            ctx.fillRect(-10, -15, 20, 10);
+            
+            ctx.restore();
 
-            if (isSkating) {
-                ctx.strokeStyle = '#ff2d55';
-                ctx.lineWidth = 4;
-                ctx.strokeRect(player.x - 25, player.y + 25, 50, 10);
-            }
+            // Отрисовка частиц и препятствий
+            state.particles.forEach(p => p.draw());
+            state.obstacles.forEach(obj => obj.draw());
         }
 
-        function endGame() {
-            isGameOver = true;
-            document.getElementById('gameOverScreen').style.display = 'flex';
-            document.getElementById('finalScore').innerText = `FINAL_SCORE: ${Math.floor(score)}`;
-            if (score > highScore) {
-                localStorage.setItem('ansa_best', score);
-            }
-        }
-
+        // Запуск
         update();
     </script>
 </body>

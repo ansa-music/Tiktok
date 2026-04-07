@@ -1,605 +1,440 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>ANSA_RUN_3D // FINAL_V8</title>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@300;700&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --accent: #ff2d55;
-      --blue: #007aff;
-      --bg: #000;
-      --glass: rgba(255, 255, 255, 0.02);
-      --border: rgba(255, 255, 255, 0.08);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      background: var(--bg);
-      color: #fff;
-      font-family: 'JetBrains Mono', monospace;
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    .hud {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      padding: calc(50px + env(safe-area-inset-top)) 30px;
-      display: flex;
-      justify-content: space-between;
-      z-index: 100;
-      pointer-events: none;
-    }
-
-    .data-stream {
-      border-left: 3px solid var(--accent);
-      padding-left: 15px;
-    }
-
-    .score-val {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 30px;
-      color: var(--accent);
-      text-shadow: 0 0 20px var(--accent);
-    }
-
-    .tag {
-      font-size: 8px;
-      letter-spacing: 5px;
-      color: #444;
-      text-transform: uppercase;
-      margin-bottom: 5px;
-    }
-
-    .ui-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.98);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      text-align: center;
-      backdrop-filter: blur(40px);
-      transition: 0.6s;
-      padding: 20px;
-    }
-
-    .cabinet-box {
-      width: 85%;
-      max-width: 440px;
-      padding: 40px;
-      background: var(--glass);
-      border: 1px solid var(--border);
-      border-radius: 40px;
-      margin-bottom: 30px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.7);
-    }
-
-    .btn-neural {
-      background: none;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 22px 40px;
-      font-family: 'Orbitron', sans-serif;
-      font-size: 0.7rem;
-      letter-spacing: 5px;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-radius: 12px;
-      transition: 0.3s;
-    }
-
-    .btn-neural:active {
-      background: var(--accent);
-      color: #fff;
-      transform: scale(0.95);
-    }
-
-    .skate-ctrl {
-      position: fixed;
-      bottom: calc(50px + env(safe-area-inset-bottom));
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 500;
-    }
-
-    .trigger {
-      width: 100px;
-      height: 100px;
-      background: var(--glass);
-      border: 2px solid var(--border);
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      backdrop-filter: blur(20px);
-      transition: 0.4s;
-      position: relative;
-      user-select: none;
-    }
-
-    .trigger.active {
-      border-color: var(--accent);
-      background: rgba(255, 45, 85, 0.2);
-      box-shadow: 0 0 50px var(--accent);
-      transform: scale(1.1) translateY(-10px);
-    }
-
-    .timer-label {
-      position: absolute;
-      top: -35px;
-      font-weight: 900;
-      color: var(--accent);
-      font-family: 'Orbitron', sans-serif;
-      font-size: 14px;
-    }
-
-    canvas {
-      display: block;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="hud">
-    <div class="data-stream">
-      <div id="ui-dist-label" class="tag">SYNC_DISTANCE</div>
-      <div id="scoreTxt" class="score-val">000000</div>
-    </div>
-    <div style="text-align:right;">
-      <div id="ui-protocol-label" class="tag">PROTOCOL_V.8</div>
-      <div id="statusTxt" style="font-size:11px; color:var(--blue); font-weight:900;">STATUS: STABLE</div>
-    </div>
-  </div>
-
-  <div id="menuScreen" class="ui-overlay">
-    <div class="cabinet-box">
-      <h1 style="font-family:'Orbitron',sans-serif; font-size:2.2rem; margin-bottom:10px;">
-        ANSA<span style="color:var(--accent)">_</span>FINAL
-      </h1>
-      <p style="font-size:9px; letter-spacing:9px; color:#333; margin-bottom:40px;">ALMATY_TECH_IS_2027</p>
-
-      <div style="text-align:left; font-size:11px; border-top:1px solid var(--border); padding-top:25px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-          <span>RECORD:</span>
-          <span id="bestScore" style="color:var(--accent)">0</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-          <span>TOTAL:</span>
-          <span id="totalDist">0</span>
-        </div>
-      </div>
-    </div>
-    <button class="btn-neural" onclick="Engine.init()">INIT_CORE</button>
-  </div>
-
-  <div id="deathScreen" class="ui-overlay" style="display:none;">
-    <h2 style="font-family:'Orbitron',sans-serif; color:var(--accent); font-size:2.2rem;">SYSTEM_FATAL_ERROR</h2>
-    <div style="margin:50px 0;">
-      <div id="finalScore" class="score-val" style="font-size:4rem;">0</div>
-    </div>
-    <button class="btn-neural" onclick="Engine.restart()">REBOOT_PROTOCOL</button>
-  </div>
-
-  <div class="skate-ctrl">
-    <div id="skateBtn" class="trigger">
-      <div id="timerTxt" class="timer-label"></div>
-      <span style="font-size:36px;">🛹</span>
-    </div>
-  </div>
-
-  <canvas id="stage"></canvas>
-
-  <script>
-    const Engine = {
-      scene: null,
-      camera: null,
-      renderer: null,
-      animationId: null,
-
-      player: null,
-      laneLines: [],
-      obstacles: [],
-      buildings: [],
-
-      isRunning: false,
-      isSkating: false,
-      isCrashed: false,
-
-      score: 0,
-      speed: 0.5,
-      laneCount: 3,
-      targetLane: 1,
-
-      crashCount: 0,
-      cooldownEnd: 0,
-
-      bestScore: 0,
-      totalDist: 0,
-
-      laneSpacing: 3.5,
-
-      init() {
-        this.loadStats();
-        this.updateStatsUI();
-
-        document.getElementById('menuScreen').style.display = 'none';
-        document.getElementById('deathScreen').style.display = 'none';
-
-        this.resetState();
+      // Продолжение метода Engine.init()
+      this.refs.menuScreen.style.opacity = '0';
+      setTimeout(() => {
+        this.refs.menuScreen.style.display = 'none';
         this.setupGraphics();
         this.setupWorld();
         this.setupControls();
-
         this.isRunning = true;
+        this.clock = new THREE.Clock();
         this.animate();
-      },
+        console.log("ANSA_CORE: BOOT_SEQUENCE_COMPLETE");
+      }, 400);
+    },
 
-      resetState() {
-        this.score = 0;
-        this.speed = 0.5;
-        this.laneCount = 3;
-        this.targetLane = 1;
-        this.isSkating = false;
-        this.isCrashed = false;
-        this.crashCount = 0;
-        this.cooldownEnd = 0;
-        this.obstacles = [];
-        this.buildings = [];
-        this.laneLines = [];
+    cacheRefs() {
+      this.refs = {
+        menuScreen: document.getElementById('menuScreen'),
+        pauseScreen: document.getElementById('pauseScreen'),
+        deathScreen: document.getElementById('deathScreen'),
+        scoreTxt: document.getElementById('scoreTxt'),
+        comboTxt: document.getElementById('comboTxt'),
+        statusTxt: document.getElementById('statusTxt'),
+        laneTxt: document.getElementById('laneTxt'),
+        skateBtn: document.getElementById('skateBtn'),
+        timerTxt: document.getElementById('timerTxt'),
+        bestScore: document.getElementById('bestScore'),
+        totalDist: document.getElementById('totalDist'),
+        deathBest: document.getElementById('deathBest'),
+        deathTotal: document.getElementById('deathTotal'),
+        finalScore: document.getElementById('finalScore'),
+        flash: document.getElementById('flash'),
+        centerToast: document.getElementById('centerToast')
+      };
+    },
 
-        document.getElementById('scoreTxt').innerText = '000000';
-        document.getElementById('timerTxt').innerText = '';
-        document.getElementById('statusTxt').innerText = 'STATUS: STABLE';
-        document.getElementById('skateBtn').classList.remove('active');
-      },
+    loadStats() {
+      this.bestScore = parseInt(localStorage.getItem('ansa_v9_best') || 0);
+      this.totalDist = parseInt(localStorage.getItem('ansa_v9_total') || 0);
+    },
 
-      loadStats() {
-        this.bestScore = Number(localStorage.getItem('ansa_run_best') || 0);
-        this.totalDist = Number(localStorage.getItem('ansa_run_total') || 0);
-      },
+    updateStatsUI() {
+      const b = Math.floor(this.bestScore);
+      const t = Math.floor(this.totalDist);
+      this.refs.bestScore.innerText = b;
+      this.refs.totalDist.innerText = t;
+      this.refs.deathBest.innerText = b;
+      this.refs.deathTotal.innerText = t;
+    },
 
-      saveStats() {
-        localStorage.setItem('ansa_run_best', String(Math.floor(this.bestScore)));
-        localStorage.setItem('ansa_run_total', String(Math.floor(this.totalDist)));
-      },
+    /**
+     * =========================================================================
+     * ГРАФИЧЕСКИЙ ДВИЖОК (THREE.JS)
+     * =========================================================================
+     */
+    setupGraphics() {
+      this.scene = new THREE.Scene();
+      this.scene.background = new THREE.Color(0x000000);
+      this.scene.fog = new THREE.Fog(0x000000, 15, 65);
 
-      updateStatsUI() {
-        document.getElementById('bestScore').innerText = Math.floor(this.bestScore);
-        document.getElementById('totalDist').innerText = Math.floor(this.totalDist);
-      },
+      this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: document.getElementById('stage'),
+        antialias: true,
+        alpha: false,
+        powerPreference: "high-performance"
+      });
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      this.renderer.outputEncoding = THREE.sRGBEncoding;
 
-      setupGraphics() {
-        this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog(0x000000, 20, 55);
+      // Освещение (Cyberpunk Neon)
+      const ambient = new THREE.AmbientLight(0xffffff, 0.15);
+      this.scene.add(ambient);
 
-        this.camera = new THREE.PerspectiveCamera(
-          75,
-          window.innerWidth / window.innerHeight,
-          0.1,
-          1000
-        );
+      const p1 = new THREE.PointLight(0xff2d55, 3, 50);
+      p1.position.set(5, 10, 5);
+      this.scene.add(p1);
 
-        this.renderer = new THREE.WebGLRenderer({
-          canvas: document.getElementById('stage'),
-          antialias: true,
-          powerPreference: 'high-performance'
-        });
+      const p2 = new THREE.PointLight(0x007aff, 2, 50);
+      p2.position.set(-5, 8, 0);
+      this.scene.add(p2);
 
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      this.camera.position.set(0, 6, 16);
+      this.camera.lookAt(0, 1, 0);
+    },
 
-        const pLight = new THREE.PointLight(0xff2d55, 6, 80);
-        pLight.position.set(0, 20, 10);
-        this.scene.add(pLight);
-        this.scene.add(new THREE.AmbientLight(0x222222));
-      },
+    setupWorld() {
+      // Пол (Сетка 2027)
+      const gridGeo = new THREE.PlaneGeometry(100, 200);
+      const gridMat = new THREE.MeshPhongMaterial({ 
+        color: 0x000000, 
+        emissive: 0x080808,
+        specular: 0x111111 
+      });
+      const floor = new THREE.Mesh(gridGeo, gridMat);
+      floor.rotation.x = -Math.PI / 2;
+      this.scene.add(floor);
 
-      setupWorld() {
-        const grid = new THREE.GridHelper(220, 110, 0xff2d55, 0x111111);
-        this.scene.add(grid);
+      const gridHelper = new THREE.GridHelper(200, 100, 0x333333, 0x111111);
+      gridHelper.position.y = 0.02;
+      this.scene.add(gridHelper);
 
-        this.updateLanes();
-        this.createInterceptor();
+      this.updateLanes();
+      this.createInterceptor();
+      
+      // Генерация города
+      for(let i=0; i<50; i++) this.spawnEnvironment(i * 12 - 100);
+    },
 
-        for (let i = 0; i < 60; i++) {
-          this.spawnStructure(i * 10 - 100);
+    updateLanes() {
+      // Очистка старых разделителей
+      this.laneLines.forEach(l => this.scene.remove(l));
+      this.laneLines = [];
+
+      const lineGeo = new THREE.PlaneGeometry(0.06, 200);
+      const lineMat = new THREE.MeshBasicMaterial({ color: 0x007aff, transparent: true, opacity: 0.5 });
+
+      // Логика отрисовки разделителей
+      for(let i = 1; i < this.laneCount; i++) {
+        const line = new THREE.Mesh(lineGeo, lineMat);
+        line.rotation.x = -Math.PI / 2;
+        // Расчет позиции: центрирование относительно 0
+        const xPos = (i - this.laneCount / 2) * this.laneSpacing;
+        line.position.set(xPos, 0.06, 0);
+        this.scene.add(line);
+        this.laneLines.push(line);
+      }
+      this.refs.laneTxt.innerText = `LANES: ${this.laneCount}`;
+    },
+
+    createInterceptor() {
+      // Удаляем если был
+      if (this.player) this.scene.remove(this.player);
+
+      const group = new THREE.Group();
+
+      // Фюзеляж (Сложный меш вместо куба)
+      const bodyGeo = new THREE.ConeGeometry(0.6, 1.6, 4);
+      const bodyMat = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.rotation.x = Math.PI / 2;
+      group.add(body);
+
+      // Крылья
+      const wingGeo = new THREE.BoxGeometry(2.2, 0.08, 0.8);
+      const wingMat = new THREE.MeshBasicMaterial({ color: 0x007aff });
+      const wing = new THREE.Mesh(wingGeo, wingMat);
+      wing.position.set(0, -0.2, 0.3);
+      group.add(wing);
+
+      // Реактивные двигатели
+      const engGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.6, 8);
+      const engMat = new THREE.MeshPhongMaterial({ color: 0x333333 });
+      const e1 = new THREE.Mesh(engGeo, engMat);
+      e1.position.set(0.5, -0.3, 0.8);
+      e1.rotation.x = Math.PI / 2;
+      group.add(e1);
+
+      const e2 = e1.clone();
+      e2.position.x = -0.5;
+      group.add(e2);
+
+      this.player = group;
+      this.player.position.set(0, 1.2, 8);
+      this.scene.add(this.player);
+    },
+
+    /**
+     * =========================================================================
+     * ЛОГИКА УПРАВЛЕНИЯ (MOBILE + PC)
+     * =========================================================================
+     */
+    setupControls() {
+      // Тапы по секторам экрана
+      window.addEventListener('touchstart', (e) => {
+        if (!this.isRunning || this.isPaused) return;
+        this.input.startX = e.touches[0].clientX;
+        this.input.startY = e.touches[0].clientY;
+        this.input.moved = false;
+      });
+
+      window.addEventListener('touchend', (e) => {
+        if (!this.isRunning || this.isPaused) return;
+        const endX = e.changedTouches[0].clientX;
+        const diff = endX - this.input.startX;
+
+        if (Math.abs(diff) < 30) {
+          // Если просто тап — определяем сторону
+          if (this.input.startX < window.innerWidth / 2) this.moveLeft();
+          else this.moveRight();
+        } else {
+          // Если свайп
+          if (diff > 0) this.moveRight();
+          else this.moveLeft();
         }
+      });
 
-        this.camera.position.set(0, 5, 14);
-        this.camera.lookAt(0, 1, 0);
-      },
+      // Клавиатура (Для теста на ПК)
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.moveLeft();
+        if (e.code === 'KeyD' || e.code === 'ArrowRight') this.moveRight();
+        if (e.code === 'Space') this.toggleSkate();
+      });
 
-      updateLanes() {
-        this.laneLines.forEach(line => this.scene.remove(line));
-        this.laneLines = [];
+      document.getElementById('skateBtn').onclick = () => this.toggleSkate();
+      document.getElementById('pauseBtn').onclick = () => this.pause();
+    },
 
-        const mat = new THREE.MeshBasicMaterial({
-          color: 0x007aff,
-          transparent: true,
-          opacity: 0.4
-        });
+    moveLeft() {
+      if (this.currentLane > 0) {
+        this.currentLane--;
+        AudioSystem.switchLane();
+      }
+    },
 
-        const geo = new THREE.PlaneGeometry(0.05, 120);
+    moveRight() {
+      if (this.currentLane < this.laneCount - 1) {
+        this.currentLane++;
+        AudioSystem.switchLane();
+      }
+    },
 
-        for (let i = 1; i < this.laneCount; i++) {
-          const line = new THREE.Mesh(geo, mat);
-          line.rotation.x = -Math.PI / 2;
-          const xPos = (i - this.laneCount / 2) * this.laneSpacing;
-          line.position.set(xPos, 0.05, 0);
-          this.scene.add(line);
-          this.laneLines.push(line);
+    toggleSkate() {
+      if (Date.now() < this.cooldownEnd || this.isPaused) return;
+      this.isSkating = !this.isSkating;
+      this.refs.skateBtn.classList.toggle('active', this.isSkating);
+      if (this.isSkating) AudioSystem.startSkate();
+      else AudioSystem.endSkate();
+    },
+
+    /**
+     * =========================================================================
+     * ИГРОВОЙ ЦИКЛ (THE ENGINE)
+     * =========================================================================
+     */
+    animate() {
+      if (!this.isRunning) return;
+      this.animationId = requestAnimationFrame(() => this.animate());
+
+      if (this.isPaused) return;
+
+      const delta = this.clock.getDelta();
+      this.updateGameState(delta);
+      this.render();
+    },
+
+    updateGameState(dt) {
+      // Прогрессия сложности
+      if (this.score > 250 && this.laneCount < 4) { this.laneCount = 4; this.updateLanes(); this.adjustCamera(4); }
+      if (this.score > 800 && this.laneCount < 5) { this.laneCount = 5; this.updateLanes(); this.adjustCamera(5); }
+      if (this.score > 1800 && this.laneCount < 6) { this.laneCount = 6; this.updateLanes(); this.adjustCamera(6); }
+
+      // Скорость (Скейт дает +25%)
+      const curSpeed = this.isSkating ? this.speed * 1.25 : this.speed;
+      this.score += curSpeed * 10 * dt;
+      this.totalDist += curSpeed * dt;
+      
+      if (this.speed < this.maxSpeed) this.speed += this.speedRamp;
+
+      this.refs.scoreTxt.innerText = Math.floor(this.score).toString().padStart(6, '0');
+
+      // Плавное движение к дорожке
+      // Исправленная формула центра: (lane - (total-1)/2) * spacing
+      const targetX = (this.currentLane - (this.laneCount - 1) / 2) * this.laneSpacing;
+      this.player.position.x += (targetX - this.player.position.x) * 0.14;
+      this.player.rotation.z = (this.player.position.x - targetX) * -0.4; // Наклон при повороте
+      this.player.rotation.y = Math.sin(Date.now() * 0.002) * 0.1; // Легкое покачивание
+
+      // Штраф скейта
+      if (this.isCrashed) {
+        const rem = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
+        if (rem > 0) {
+          this.refs.timerTxt.innerText = rem + "S";
+        } else {
+          this.isCrashed = false;
+          this.refs.timerTxt.innerText = "";
+          this.refs.statusTxt.innerText = "STATUS: STABLE";
+          this.refs.statusTxt.style.color = "var(--blue)";
         }
-      },
+      }
 
-      createInterceptor() {
-        const group = new THREE.Group();
+      // Спавн препятствий
+      if (Date.now() - this.lastSpawnTime > this.spawnCooldown / (this.speed * 4)) {
+        this.spawnObstacle();
+        this.lastSpawnTime = Date.now();
+      }
 
-        const core = new THREE.Mesh(
-          new THREE.BoxGeometry(0.6, 0.2, 1.2),
-          new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true })
-        );
-        group.add(core);
+      // Обновление объектов
+      this.updateObjects(curSpeed);
+    },
 
-        const wings = new THREE.Mesh(
-          new THREE.BoxGeometry(1.8, 0.05, 0.5),
-          new THREE.MeshBasicMaterial({ color: 0x007aff })
-        );
-        wings.position.set(0, -0.1, 0.2);
-        group.add(wings);
+    updateObjects(s) {
+      for (let i = this.obstacles.length - 1; i >= 0; i--) {
+        const o = this.obstacles[i];
+        o.position.z += s * 60 * 0.016;
 
-        this.player = group;
-        this.player.position.set(0, 1.0, 6.5);
-        this.scene.add(this.player);
-      },
-
-      spawnStructure(z) {
-        const h = 5 + Math.random() * 25;
-        const building = new THREE.Mesh(
-          new THREE.BoxGeometry(4, h, 4),
-          new THREE.MeshPhongMaterial({
-            color: 0x080808,
-            wireframe: Math.random() > 0.4
-          })
-        );
-
-        building.position.set(Math.random() > 0.5 ? 20 : -20, h / 2, z);
-        this.scene.add(building);
-        this.buildings.push(building);
-      },
-
-      setupControls() {
-        if (!this._eventsBound) {
-          window.addEventListener('resize', this.handleResize.bind(this));
-
-          window.addEventListener('touchstart', (e) => {
-            const skateBtn = document.getElementById('skateBtn');
-            if (skateBtn.contains(e.target)) return;
-
-            const touchX = e.touches[0].clientX;
-            const sector = window.innerWidth / this.laneCount;
-            this.targetLane = this.clamp(Math.floor(touchX / sector), 0, this.laneCount - 1);
-          }, { passive: true });
-
-          window.addEventListener('keydown', (e) => {
-            if (!this.isRunning) return;
-
-            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-              this.targetLane = this.clamp(this.targetLane - 1, 0, this.laneCount - 1);
-            }
-
-            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-              this.targetLane = this.clamp(this.targetLane + 1, 0, this.laneCount - 1);
-            }
-
-            if (e.code === 'Space') {
-              e.preventDefault();
-              if (!this.isCrashed) {
-                this.isSkating = !this.isSkating;
-                document.getElementById('skateBtn').classList.toggle('active', this.isSkating);
-              }
-            }
-          });
-
-          document.getElementById('skateBtn').addEventListener('touchstart', (e) => {
-            e.stopPropagation();
-            if (this.isCrashed || !this.isRunning) return;
-            this.isSkating = !this.isSkating;
-            document.getElementById('skateBtn').classList.toggle('active', this.isSkating);
-          });
-
-          document.getElementById('skateBtn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (this.isCrashed || !this.isRunning) return;
-            this.isSkating = !this.isSkating;
-            document.getElementById('skateBtn').classList.toggle('active', this.isSkating);
-          });
-
-          this._eventsBound = true;
-        }
-      },
-
-      handleResize() {
-        if (!this.camera || !this.renderer) return;
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      },
-
-      clamp(value, min, max) {
-        return Math.min(Math.max(value, min), max);
-      },
-
-      spawnObstacle() {
-        const lane = Math.floor(Math.random() * this.laneCount);
-        const box = new THREE.Mesh(
-          new THREE.BoxGeometry(1.3, 1.3, 1.3),
-          new THREE.MeshPhongMaterial({
-            color: 0xff2d55,
-            emissive: 0xff2d55,
-            emissiveIntensity: 0.8
-          })
-        );
-
-        const xPos = (lane - (this.laneCount - 1) / 2) * this.laneSpacing;
-        box.position.set(xPos, 0.7, -65);
-        this.scene.add(box);
-        this.obstacles.push(box);
-      },
-
-      adjustCamera(n) {
-        this.camera.position.z = 14 + (n - 3) * 1.5;
-        this.camera.position.y = 5 + (n - 3) * 0.5;
-        this.camera.fov = 75 + (n - 3) * 2;
-        this.camera.updateProjectionMatrix();
-      },
-
-      handleImpact() {
-        this.isSkating = false;
-        this.isCrashed = true;
-        this.crashCount++;
-        this.cooldownEnd = Date.now() + (this.crashCount * 5000);
-
-        document.getElementById('skateBtn').classList.remove('active');
-        document.getElementById('statusTxt').innerText = 'STATUS: COOLDOWN';
-      },
-
-      gameOver() {
-        this.isRunning = false;
-        cancelAnimationFrame(this.animationId);
-
-        const final = Math.floor(this.score);
-        this.totalDist += final;
-        this.bestScore = Math.max(this.bestScore, final);
-        this.saveStats();
-        this.updateStatsUI();
-
-        document.getElementById('finalScore').innerText = final;
-        document.getElementById('statusTxt').innerText = 'STATUS: FATAL';
-        document.getElementById('deathScreen').style.display = 'flex';
-      },
-
-      restart() {
-        document.getElementById('deathScreen').style.display = 'none';
-
-        if (this.renderer) {
-          this.renderer.dispose();
-        }
-
-        const canvas = document.getElementById('stage');
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-        if (gl) {
-          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        }
-
-        this.init();
-      },
-
-      animate() {
-        if (!this.isRunning) return;
-
-        this.animationId = requestAnimationFrame(() => this.animate());
-
-        if (this.score > 200 && this.laneCount < 4) {
-          this.laneCount = 4;
-          this.targetLane = this.clamp(this.targetLane, 0, this.laneCount - 1);
-          this.updateLanes();
-          this.adjustCamera(4);
-        }
-
-        if (this.score > 700 && this.laneCount < 5) {
-          this.laneCount = 5;
-          this.targetLane = this.clamp(this.targetLane, 0, this.laneCount - 1);
-          this.updateLanes();
-          this.adjustCamera(5);
-        }
-
-        if (this.score > 1500 && this.laneCount < 6) {
-          this.laneCount = 6;
-          this.targetLane = this.clamp(this.targetLane, 0, this.laneCount - 1);
-          this.updateLanes();
-          this.adjustCamera(6);
-        }
-
-        const frameSpeed = this.isSkating ? this.speed * 1.25 : this.speed;
-        this.score += frameSpeed;
-        this.speed += 0.00015;
-
-        document.getElementById('scoreTxt').innerText = Math.floor(this.score).toString().padStart(6, '0');
-
-        const targetX = (this.targetLane - (this.laneCount - 1) / 2) * this.laneSpacing;
-        this.player.position.x += (targetX - this.player.position.x) * 0.16;
-        this.player.rotation.z = (this.player.position.x - targetX) * 0.45;
-        this.player.rotation.y += 0.03;
-
-        if (this.isCrashed) {
-          const rem = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
-          if (rem > 0) {
-            document.getElementById('timerTxt').innerText = rem + 'S';
-          } else {
-            this.isCrashed = false;
-            document.getElementById('timerTxt').innerText = '';
-            document.getElementById('statusTxt').innerText = 'STATUS: STABLE';
-          }
-        }
-
-        if (Math.random() < 0.03 + (this.score / 60000)) {
-          this.spawnObstacle();
-        }
-
-        for (let i = this.obstacles.length - 1; i >= 0; i--) {
-          const o = this.obstacles[i];
-          o.position.z += frameSpeed * 3.5;
-          o.rotation.x += 0.02;
-          o.rotation.y += 0.03;
-
-          const closeX = Math.abs(this.player.position.x - o.position.x) < 0.9;
-          const closeZ = Math.abs(this.player.position.z - o.position.z) < 0.9;
-
-          if (closeX && closeZ) {
-            if (this.isSkating) {
-              this.handleImpact();
-              this.scene.remove(o);
-              this.obstacles.splice(i, 1);
-            } else {
-              this.gameOver();
-              return;
-            }
-          }
-
-          if (o.position.z > 20) {
+        // Коллизия (Математически точная в 3D)
+        const dist = this.player.position.distanceTo(o.position);
+        if (dist < 1.4) {
+          if (this.isSkating) {
+            this.handleImpact();
             this.scene.remove(o);
             this.obstacles.splice(i, 1);
+          } else {
+            this.gameOver();
           }
         }
 
-        this.buildings.forEach((b) => {
-          b.position.z += frameSpeed * 2;
-          if (b.position.z > 30) b.position.z = -140;
-        });
-
-        this.renderer.render(this.scene, this.camera);
+        if (o.position.z > 25) {
+          this.scene.remove(o);
+          this.obstacles.splice(i, 1);
+          // Бонус за уклонение
+          this.combo++;
+          this.refs.comboTxt.innerText = `COMBO: ${this.combo}`;
+          if (this.combo % 10 === 0) AudioSystem.combo();
+        }
       }
-    };
 
+      // Городской скролл
+      this.buildings.forEach(b => {
+        b.position.z += s * 40 * 0.016;
+        if (b.position.z > 30) b.position.z = -150;
+      });
+    },
+
+    handleImpact() {
+      this.isSkating = false;
+      this.isCrashed = true;
+      this.crashCount++;
+      this.cooldownEnd = Date.now() + (this.crashCount * 5000); // 5, 10, 15... сек
+      this.refs.skateBtn.classList.remove('active');
+      this.refs.statusTxt.innerText = "STATUS: ERROR";
+      this.refs.statusTxt.style.color = "var(--accent)";
+      this.flashScreen();
+      AudioSystem.impact();
+      this.combo = 0;
+      this.refs.comboTxt.innerText = `COMBO: 0`;
+    },
+
+    adjustCamera(n) {
+      // Плавное отдаление камеры при расширении дорог
+      const targetZ = 16 + (n - 3) * 1.8;
+      const targetY = 6 + (n - 3) * 0.6;
+      
+      // Анимация камеры (можно добавить Tween, но сделаем через лерп в цикле или разово)
+      this.camera.position.z = targetZ;
+      this.camera.position.y = targetY;
+      this.camera.fov = 75 + (n - 3) * 2.5;
+      this.camera.updateProjectionMatrix();
+      
+      this.showToast(`LANE EXPANDED: ${n}`);
+    },
+
+    spawnObstacle() {
+      const lane = Math.floor(Math.random() * this.laneCount);
+      const geo = new THREE.BoxGeometry(1.4, 1.4, 1.4);
+      const mat = new THREE.MeshPhongMaterial({ 
+        color: 0xff2d55, 
+        emissive: 0xff2d55, 
+        emissiveIntensity: 0.6 
+      });
+      const box = new THREE.Mesh(geo, mat);
+      
+      const xPos = (lane - (this.laneCount - 1) / 2) * this.laneSpacing;
+      box.position.set(xPos, 0.7, -80);
+      this.scene.add(box);
+      this.obstacles.push(box);
+    },
+
+    spawnEnvironment(z) {
+        const h = 8 + Math.random() * 25;
+        const geo = new THREE.BoxGeometry(5, h, 5);
+        const mat = new THREE.MeshPhongMaterial({ color: 0x080808, wireframe: Math.random() > 0.5 });
+        const b = new THREE.Mesh(geo, mat);
+        
+        const side = Math.random() > 0.5 ? 25 : -25;
+        b.position.set(side, h/2, z);
+        this.scene.add(b);
+        this.buildings.push(b);
+    },
+
+    render() {
+      this.renderer.render(this.scene, this.camera);
+    },
+
+    flashScreen() {
+      this.refs.flash.classList.add('show');
+      setTimeout(() => this.refs.flash.classList.remove('show'), 150);
+    },
+
+    showToast(msg) {
+      this.refs.centerToast.innerText = msg;
+      this.refs.centerToast.classList.add('show');
+      setTimeout(() => this.refs.centerToast.classList.remove('show'), 2000);
+    },
+
+    pause() {
+      if (!this.isRunning || this.isPaused) return;
+      this.isPaused = true;
+      this.refs.pauseScreen.style.display = 'flex';
+      this.refs.pauseScreen.style.opacity = '1';
+    },
+
+    resume() {
+      this.isPaused = false;
+      this.refs.pauseScreen.style.display = 'none';
+      AudioSystem.resume();
+    },
+
+    gameOver() {
+      this.isRunning = false;
+      AudioSystem.gameOver();
+      
+      if (this.score > this.bestScore) {
+        this.bestScore = this.score;
+        localStorage.setItem('ansa_v9_best', Math.floor(this.bestScore));
+      }
+      localStorage.setItem('ansa_v9_total', Math.floor(this.totalDist));
+
+      this.updateStatsUI();
+      this.refs.finalScore.innerText = Math.floor(this.score);
+      this.refs.deathScreen.style.display = 'flex';
+      this.refs.deathScreen.style.opacity = '1';
+    },
+
+    restart() {
+      location.reload();
+    }
+  };
+
+  // Инициализация при загрузке
+  window.onload = () => {
+    Engine.cacheRefs();
     Engine.loadStats();
     Engine.updateStatsUI();
-  </script>
+  };
+</script>
 </body>
 </html>

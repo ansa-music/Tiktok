@@ -3,255 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>ANSA // NEURAL_KICKS_ALMATY</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Plus+Jakarta+Sans:wght@300;800&display=swap" rel="stylesheet">
-    
+    <title>ANSA_RETAIL // ALMATY_2027</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;800&family=Orbitron:wght@900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505;
+            --bg: #080808;
             --accent: #ff2d55;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.08);
-            --safe-bottom: env(safe-area-inset-bottom);
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
 
-        body {
-            background: var(--bg);
-            color: #fff;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            overflow-x: hidden;
-            -webkit-user-select: none;
+        /* Шапка и Локация */
+        header { padding: 50px 20px 10px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; }
+        .logo span { color: var(--accent); }
+
+        /* Селектор Магазинов (ТРЦ Алматы) */
+        .mall-selector {
+            display: flex; gap: 10px; overflow-x: auto; padding: 10px 20px 20px;
+            scrollbar-width: none; -ms-overflow-style: none;
         }
-
-        canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.4; }
-
-        /* UI Layer */
-        .app-container {
-            padding: 60px 20px calc(120px + var(--safe-bottom));
-            min-height: 100vh;
+        .mall-selector::-webkit-scrollbar { display: none; }
+        .mall-btn {
+            background: var(--glass); border: 1px solid var(--border);
+            padding: 10px 20px; border-radius: 15px; white-space: nowrap;
+            font-size: 0.8rem; font-weight: bold; transition: 0.3s;
         }
+        .mall-btn.active { background: var(--accent); border-color: var(--accent); }
 
-        /* Глассморфизм-шапка */
-        .header {
-            position: fixed; top: 0; left: 0; width: 100%;
-            padding: 20px; background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(20px); z-index: 100;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border);
+        /* Поиск и Подсказки */
+        .search-box { padding: 0 20px; position: relative; z-index: 100; }
+        .input-wrap {
+            background: #151515; border: 1px solid var(--border);
+            border-radius: 20px; padding: 18px 20px; display: flex; align-items: center;
         }
-
-        .brand { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: 2px; font-size: 1.1rem; }
-        .brand span { color: var(--accent); }
-
-        /* ИИ Интеллектуальный Поиск */
-        .search-module { margin-bottom: 40px; }
-        .search-input-wrap {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 20px;
-            display: flex; align-items: center;
-            transition: 0.3s;
-        }
-        .search-input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 30px rgba(255, 45, 85, 0.2); }
+        input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-size: 1rem; }
         
-        input {
-            background: transparent; border: none; color: #fff;
-            font-size: 1.1rem; width: 100%; outline: none;
+        .suggestions {
+            position: absolute; top: 105%; left: 20px; right: 20px;
+            background: #151515; border: 1px solid var(--border);
+            border-radius: 15px; display: none; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+        .suggest-item { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 0.9rem; cursor: pointer; }
+        .suggest-item:last-child { border-none; }
 
-        /* Секция ИИ-рекомендаций (Bento Grid) */
-        .feed-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        /* Сетка товаров */
+        #feed { padding: 20px; display: grid; grid-template-columns: 1fr; gap: 25px; }
+        .card {
+            background: var(--glass); border-radius: 30px; padding: 15px;
+            border: 1px solid var(--border); animation: fadeInUp 0.5s ease;
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .kick-card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 32px;
-            overflow: hidden;
-            position: relative;
-            transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
+        .img-holder { width: 100%; height: 450px; border-radius: 22px; overflow: hidden; background: #111; position: relative; }
+        .img-holder img { width: 100%; height: 100%; object-fit: cover; }
+        .mall-tag { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.7); padding: 5px 12px; border-radius: 10px; font-size: 0.6rem; color: var(--accent); font-weight: 800; }
 
-        .img-wrapper {
-            width: 100%; height: 550px;
-            position: relative; overflow: hidden;
-        }
-        .img-wrapper img {
-            width: 100%; height: 100%; object-fit: cover;
-            transition: 1.5s transform;
-        }
-        
-        .overlay-data {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            padding: 30px 20px;
-            background: linear-gradient(transparent, rgba(0,0,0,0.9));
-        }
-
-        .store-chip {
-            background: var(--accent);
-            padding: 5px 12px; border-radius: 10px;
-            font-size: 0.7rem; font-weight: 800;
-            margin-bottom: 10px; display: inline-block;
-        }
-
-        .kick-title { font-size: 1.8rem; font-weight: 800; text-transform: uppercase; line-height: 1; margin-bottom: 8px; }
-        .price-row { display: flex; justify-content: space-between; align-items: center; }
-        .price { font-size: 1.2rem; font-weight: 300; }
-        
-        .distance { font-size: 0.7rem; color: #888; }
-
-        /* AI Processor Overlay */
-        #ai-status {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            z-index: 1000; justify-content: center; align-items: center; flex-direction: column;
-        }
-        .neural-line { width: 200px; height: 1px; background: var(--accent); position: relative; overflow: hidden; }
-        .neural-line::after {
-            content: ''; position: absolute; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, #fff, transparent);
-            animation: neural-pulse 1s infinite;
-        }
-        @keyframes neural-pulse { to { left: 100%; } }
-
-        /* Навигация */
-        nav {
-            position: fixed; bottom: 30px; left: 20px; right: 20px;
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(40px);
-            border: 1px solid var(--border); border-radius: 30px;
-            height: 75px; display: flex; justify-content: space-around; align-items: center;
-            z-index: 1000;
-        }
-        .nav-icon { font-size: 1.4rem; opacity: 0.4; transition: 0.3s; }
-        .nav-icon.active { opacity: 1; transform: scale(1.2); color: var(--accent); }
+        .info { padding: 15px 5px; }
+        .name { font-size: 1.4rem; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .price { font-size: 1.1rem; color: #fff; font-weight: 300; }
     </style>
 </head>
 <body>
 
-    <div id="ai-status">
-        <div class="neural-line"></div>
-        <p style="margin-top: 20px; letter-spacing: 4px; font-size: 0.6rem; color: var(--accent);">NEURAL_ALMATY_PROCESSOR_V27</p>
+<header>
+    <div class="logo">ANSA<span>_</span>RETAIL</div>
+    <div style="font-size: 0.6rem; opacity: 0.5;">ALMATY // 2026</div>
+</header>
+
+<div class="mall-selector" id="mallTabs">
+    <div class="mall-btn active" onclick="filterMall('ALL')">ВСЕ ТРЦ</div>
+    <div class="mall-btn" onclick="filterMall('MEGA')">MEGA CENTER</div>
+    <div class="mall-btn" onclick="filterMall('DOSTYK')">DOSTYK PLAZA</div>
+    <div class="mall-btn" onclick="filterMall('ESENTAI')">ESENTAI MALL</div>
+</div>
+
+<div class="search-box">
+    <div class="input-wrap">
+        <input type="text" id="mainSearch" placeholder="Начни писать: Anta, Nike..." autocomplete="off">
     </div>
+    <div class="suggestions" id="suggestBox"></div>
+</div>
 
-    <header class="header">
-        <div class="brand">ANSA<span>_</span>CORE</div>
-        <div style="font-size: 0.6rem; text-align: right;">
-            STOCK: ONLINE<br>LOC: ALMATY_HUB
-        </div>
-    </header>
+<main id="feed"></main>
 
-    <div class="app-container">
-        <div class="search-module">
-            <div class="search-input-wrap">
-                <input type="text" id="aiSearch" placeholder="Спроси ИИ о кроссовках в Алматы..." autocomplete="off">
-                <span id="ai-pulse" style="width: 10px; height: 10px; background: var(--accent); border-radius: 50%;"></span>
-            </div>
-            <p style="font-size: 0.6rem; color: #444; margin-top: 10px; padding-left: 10px;">ПРИМЕР: "Найди черные Jordan в Dostyk Plaza"</p>
-        </div>
+<script>
+    // База Брендов для подсказок
+    const BRANDS = ["Anta", "Adidas", "Asics", "Jordan", "Li-Ning", "New Balance", "Nike", "Puma", "Reebok", "Yeezy"];
+    
+    // База Кроссовок (Контент для Алматы)
+    const KICKS_DATA = [
+        { brand: "Anta", model: "Shock The Game", price: 58000, mall: "MEGA", tags: ["an", "ant", "anta"] },
+        { brand: "Anta", model: "KT9 Light", price: 72000, mall: "DOSTYK", tags: ["an", "ant", "anta"] },
+        { brand: "Nike", model: "Air Jordan 1 Retro", price: 125000, mall: "ESENTAI", tags: ["ni", "nik", "nike", "jo"] },
+        { brand: "Nike", model: "Dunk Low Panda", price: 85000, mall: "MEGA", tags: ["ni", "nik", "nike"] },
+        { brand: "Adidas", model: "Yeezy Boost 350", price: 195000, mall: "DOSTYK", tags: ["ad", "adi", "yee"] },
+        { brand: "Li-Ning", model: "Way of Wade 10", price: 110000, mall: "MEGA", tags: ["li", "lin"] }
+    ];
 
-        <div class="feed-grid" id="mainFeed">
-            </div>
-    </div>
+    const input = document.getElementById('mainSearch');
+    const suggestBox = document.getElementById('suggestBox');
+    const feed = document.getElementById('feed');
+    let currentMall = 'ALL';
 
-    <nav>
-        <div class="nav-icon active">⬢</div>
-        <div class="nav-icon">◈</div>
-        <div class="nav-icon">⚙</div>
-    </nav>
+    // Функция форматирования Тенге
+    const formatKZT = (n) => new Intl.NumberFormat('ru-RU').format(n) + ' ₸';
 
-    <script>
-        // --- 1. Трёхмерная Нейросеть (Three.js) ---
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        const geometry = new THREE.IcosahedronGeometry(2, 1);
-        const material = new THREE.MeshBasicMaterial({ color: 0xff2d55, wireframe: true, transparent: true, opacity: 0.1 });
-        const sphere = new THREE.Mesh(geometry, material);
-        scene.add(sphere);
-        camera.position.z = 5;
-
-        function animate3D() {
-            requestAnimationFrame(animate3D);
-            sphere.rotation.y += 0.002;
-            sphere.rotation.x += 0.001;
-            renderer.render(scene, camera);
-        }
-        animate3D();
-
-        // --- 2. ИИ-Движок Поиска (Semantic Search Engine) ---
-        const ALMATY_RETAIL_DB = [
-            { model: "Nike Air Jordan 1", brand: "Jordan", shop: "Dostyk Plaza", price: 185000, district: "Медеуский" },
-            { model: "Yeezy Boost 350", brand: "Adidas", shop: "Esentai Mall", price: 245000, district: "Бостандыкский" },
-            { model: "Nike Dunk Low", brand: "Nike", shop: "Mega Alma-Ata", price: 85000, district: "Алмалинский" },
-            { model: "New Balance 2002R", brand: "New Balance", shop: "Promenade", price: 115000, district: "Алмалинский" },
-            { model: "Travis Scott x Jordan", brand: "Jordan", shop: "Limelight Almaty", price: 850000, district: "Медеуский" }
-        ];
-
-        const fuseOptions = {
-            keys: ['model', 'brand', 'shop', 'district'],
-            threshold: 0.3,
-            includeScore: true
-        };
-        const fuse = new Fuse(ALMATY_RETAIL_DB, fuseOptions);
-
-        // --- 3. Логика Интерфейса ---
-        const input = document.getElementById('aiSearch');
-        const feed = document.getElementById('mainFeed');
-        const status = document.getElementById('ai-status');
-
-        function formatKZT(val) { return new Intl.NumberFormat('ru-RU').format(val) + ' ₸'; }
-
-        async function processAIQuery(query) {
-            status.style.display = 'flex';
-            feed.innerHTML = '';
-            
-            // Имитация "размышления" ИИ
-            await new Promise(r => setTimeout(r, 1500));
-            
-            const results = fuse.search(query);
-            status.style.display = 'none';
-
-            if (results.length > 0) {
-                results.forEach((res, i) => {
-                    const item = res.item;
-                    const card = document.createElement('div');
-                    card.className = 'kick-card';
-                    card.style.animationDelay = `${i * 0.1}s`;
-                    
-                    const imgUrl = `https://loremflickr.com/800/1200/sneakers,lifestyle,${item.brand.toLowerCase()}/all?lock=${Math.random()}`;
-
-                    card.innerHTML = `
-                        <div class="img-wrapper">
-                            <img src="${imgUrl}" alt="sneaker" onload="this.style.opacity='1'" style="opacity:0;">
-                            <div class="overlay-data">
-                                <div class="store-chip">${item.shop}</div>
-                                <h2 class="kick-title">${item.model}</h2>
-                                <div class="price-row">
-                                    <span class="price">${formatKZT(item.price)}</span>
-                                    <span class="distance">📍 ${item.district} район</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    feed.appendChild(card);
+    // 1. Система подсказок (Autocomplete)
+    input.addEventListener('input', (e) => {
+        const val = e.target.value.toLowerCase();
+        suggestBox.innerHTML = '';
+        
+        if (val.length > 0) {
+            const matches = BRANDS.filter(b => b.toLowerCase().startsWith(val));
+            if (matches.length > 0) {
+                suggestBox.style.display = 'block';
+                matches.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'suggest-item';
+                    div.innerText = m;
+                    div.onclick = () => {
+                        input.value = m;
+                        suggestBox.style.display = 'none';
+                        renderFeed(m);
+                    };
+                    suggestBox.appendChild(div);
                 });
-            } else {
-                feed.innerHTML = `<p style="text-align:center; padding:50px; color:#444;">ИИ не нашел точного совпадения в Алматы. Попробуй другой бренд.</p>`;
-            }
-        }
+            } else { suggestBox.style.display = 'none'; }
+        } else { suggestBox.style.display = 'none'; }
+    });
 
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && input.value.length > 1) {
-                processAIQuery(input.value);
-            }
+    // 2. Фильтр по ТРЦ
+    function filterMall(mall) {
+        currentMall = mall;
+        document.querySelectorAll('.mall-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.innerText.includes(mall) || (mall === 'ALL' && btn.innerText === 'ВСЕ ТРЦ'));
         });
-    </script>
+        renderFeed(input.value);
+    }
+
+    // 3. Отрисовка ленты
+    function renderFeed(query = "") {
+        feed.innerHTML = '';
+        const search = query.toLowerCase();
+        
+        const filtered = KICKS_DATA.filter(k => {
+            const mallMatch = (currentMall === 'ALL' || k.mall === currentMall);
+            const brandMatch = k.brand.toLowerCase().includes(search) || k.model.toLowerCase().includes(search) || k.tags.some(t => t === search);
+            return mallMatch && brandMatch;
+        });
+
+        filtered.forEach((k, i) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            const imgUrl = `https://loremflickr.com/800/1000/sneakers,${k.brand.toLowerCase()}/all?lock=${i + Math.random()}`;
+            
+            card.innerHTML = `
+                <div class="img-holder">
+                    <div class="mall-tag">${k.mall} CENTER</div>
+                    <img src="${imgUrl}" alt="kicks">
+                </div>
+                <div class="info">
+                    <div class="name">${k.brand} ${k.model}</div>
+                    <div class="price">${formatKZT(k.price)}</div>
+                </div>
+            `;
+            feed.appendChild(card);
+        });
+        
+        if (filtered.length === 0) {
+            feed.innerHTML = `<p style="text-align:center; opacity:0.3; padding:40px;">Ничего не найдено в этом ТРЦ...</p>`;
+        }
+    }
+
+    // Закрытие подсказок при клике вне
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-box')) suggestBox.style.display = 'none';
+    });
+
+    // Стартовая отрисовка
+    renderFeed();
+</script>
+
 </body>
 </html>

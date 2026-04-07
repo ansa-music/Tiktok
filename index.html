@@ -2,16 +2,20 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ANSA_RETAIL_OS // ALMATY</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ANSA // NEURAL_KICKS_ALMATY</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Plus+Jakarta+Sans:wght@300;800&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg: #0d0d0d;
-            --accent-red: #ff2d55;
-            --tech-blue: #007aff;
+            --bg: #050505;
+            --accent: #ff2d55;
             --glass: rgba(255, 255, 255, 0.03);
             --border: rgba(255, 255, 255, 0.08);
+            --safe-bottom: env(safe-area-inset-bottom);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -19,177 +23,233 @@
         body {
             background: var(--bg);
             color: #fff;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             overflow-x: hidden;
-            background-image: radial-gradient(circle at 0% 0%, #1a1a1a 0%, #0d0d0d 100%);
+            -webkit-user-select: none;
         }
 
-        /* Хедер в стиле ANSA */
-        header {
-            padding: 50px 25px 15px;
+        canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.4; }
+
+        /* UI Layer */
+        .app-container {
+            padding: 60px 20px calc(120px + var(--safe-bottom));
+            min-height: 100vh;
+        }
+
+        /* Глассморфизм-шапка */
+        .header {
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: 20px; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(20px); z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
-        }
-        .brand { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; letter-spacing: 2px; color: var(--tech-blue); }
-        .brand span { color: var(--accent-red); }
-        .city-tag { font-size: 0.6rem; background: var(--glass); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); }
-
-        /* ИИ-Поиск: Удобно под большой палец */
-        .search-area { padding: 10px 20px; position: sticky; top: 10px; z-index: 1000; }
-        .neural-input {
-            background: rgba(20, 20, 20, 0.8);
-            backdrop-filter: blur(30px);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 18px 20px;
-            display: flex; align-items: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-        }
-        input {
-            background: transparent; border: none; color: #fff;
-            font-size: 1rem; width: 100%; outline: none; font-family: 'Inter', sans-serif;
+            border-bottom: 1px solid var(--border);
         }
 
-        /* Сетка результатов */
-        #main-feed { padding: 20px; display: grid; grid-template-columns: 1fr; gap: 30px; }
+        .brand { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: 2px; font-size: 1.1rem; }
+        .brand span { color: var(--accent); }
 
-        .card {
+        /* ИИ Интеллектуальный Поиск */
+        .search-module { margin-bottom: 40px; }
+        .search-input-wrap {
             background: var(--glass);
             border: 1px solid var(--border);
-            border-radius: 30px;
-            padding: 12px;
-            animation: fadeIn 0.8s ease;
-            position: relative;
+            border-radius: 24px;
+            padding: 20px;
+            display: flex; align-items: center;
+            transition: 0.3s;
+        }
+        .search-input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 30px rgba(255, 45, 85, 0.2); }
+        
+        input {
+            background: transparent; border: none; color: #fff;
+            font-size: 1.1rem; width: 100%; outline: none;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* Секция ИИ-рекомендаций (Bento Grid) */
+        .feed-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
 
-        .image-box {
-            width: 100%; height: 480px;
-            border-radius: 22px;
+        .kick-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 32px;
             overflow: hidden;
             position: relative;
-            background: #111;
-        }
-        .image-box img { width: 100%; height: 100%; object-fit: cover; transition: 1s; opacity: 0; }
-
-        /* Информация о магазине в Алматы */
-        .store-badge {
-            position: absolute; top: 15px; right: 15px;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-            padding: 6px 12px; border-radius: 10px; font-size: 0.7rem;
-            border: 1px solid var(--accent-red); color: var(--accent-red);
-            font-weight: bold;
+            transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        .info { padding: 15px 10px; }
-        .model-name { font-weight: 800; font-size: 1.3rem; margin-bottom: 4px; text-transform: uppercase; }
-        .price-tag { color: #fff; font-size: 1.1rem; font-weight: 300; }
-        .location-text { font-size: 0.7rem; color: #666; margin-top: 8px; display: flex; align-items: center; gap: 5px; }
-
-        /* Сканер ИИ */
-        #ai-scanner {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-            z-index: 2000; justify-content: center; align-items: center; flex-direction: column;
+        .img-wrapper {
+            width: 100%; height: 550px;
+            position: relative; overflow: hidden;
         }
-        .scan-bar { width: 70%; height: 2px; background: var(--tech-blue); box-shadow: 0 0 20px var(--tech-blue); animation: scan 2s infinite; }
-        @keyframes scan { 0% { transform: translateY(-50px); } 50% { transform: translateY(50px); } 100% { transform: translateY(-50px); } }
+        .img-wrapper img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: 1.5s transform;
+        }
+        
+        .overlay-data {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 30px 20px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+        }
+
+        .store-chip {
+            background: var(--accent);
+            padding: 5px 12px; border-radius: 10px;
+            font-size: 0.7rem; font-weight: 800;
+            margin-bottom: 10px; display: inline-block;
+        }
+
+        .kick-title { font-size: 1.8rem; font-weight: 800; text-transform: uppercase; line-height: 1; margin-bottom: 8px; }
+        .price-row { display: flex; justify-content: space-between; align-items: center; }
+        .price { font-size: 1.2rem; font-weight: 300; }
+        
+        .distance { font-size: 0.7rem; color: #888; }
+
+        /* AI Processor Overlay */
+        #ai-status {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            z-index: 1000; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .neural-line { width: 200px; height: 1px; background: var(--accent); position: relative; overflow: hidden; }
+        .neural-line::after {
+            content: ''; position: absolute; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, #fff, transparent);
+            animation: neural-pulse 1s infinite;
+        }
+        @keyframes neural-pulse { to { left: 100%; } }
 
         /* Навигация */
         nav {
             position: fixed; bottom: 30px; left: 20px; right: 20px;
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px);
-            height: 70px; border-radius: 25px; border: 1px solid var(--border);
-            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(40px);
+            border: 1px solid var(--border); border-radius: 30px;
+            height: 75px; display: flex; justify-content: space-around; align-items: center;
+            z-index: 1000;
         }
-        .nav-btn { font-size: 1.4rem; opacity: 0.4; }
-        .nav-btn.active { opacity: 1; color: var(--tech-blue); }
+        .nav-icon { font-size: 1.4rem; opacity: 0.4; transition: 0.3s; }
+        .nav-icon.active { opacity: 1; transform: scale(1.2); color: var(--accent); }
     </style>
 </head>
 <body>
 
-    <div id="ai-scanner">
-        <div class="scan-bar"></div>
-        <p style="margin-top: 20px; font-size: 0.7rem; letter-spacing: 3px; color: var(--tech-blue);">NEURAL_ALMATY_ENGINE_V.27</p>
+    <div id="ai-status">
+        <div class="neural-line"></div>
+        <p style="margin-top: 20px; letter-spacing: 4px; font-size: 0.6rem; color: var(--accent);">NEURAL_ALMATY_PROCESSOR_V27</p>
     </div>
 
-    <header>
-        <div class="brand">ANSA<span>_</span>RETAIL</div>
-        <div class="city-tag">ALMATY // KAZAKHSTAN</div>
+    <header class="header">
+        <div class="brand">ANSA<span>_</span>CORE</div>
+        <div style="font-size: 0.6rem; text-align: right;">
+            STOCK: ONLINE<br>LOC: ALMATY_HUB
+        </div>
     </header>
 
-    <div class="search-area">
-        <div class="neural-input">
-            <input type="text" id="aiSearch" placeholder="Какой бренд ищем в Алматы?" autocomplete="off">
-            <span style="color: var(--accent-red);">●</span>
+    <div class="app-container">
+        <div class="search-module">
+            <div class="search-input-wrap">
+                <input type="text" id="aiSearch" placeholder="Спроси ИИ о кроссовках в Алматы..." autocomplete="off">
+                <span id="ai-pulse" style="width: 10px; height: 10px; background: var(--accent); border-radius: 50%;"></span>
+            </div>
+            <p style="font-size: 0.6rem; color: #444; margin-top: 10px; padding-left: 10px;">ПРИМЕР: "Найди черные Jordan в Dostyk Plaza"</p>
         </div>
+
+        <div class="feed-grid" id="mainFeed">
+            </div>
     </div>
 
-    <main id="main-feed">
-        </main>
-
     <nav>
-        <div class="nav-btn active">◈</div>
-        <div class="nav-btn">◉</div>
-        <div class="nav-btn">◎</div>
+        <div class="nav-icon active">⬢</div>
+        <div class="nav-icon">◈</div>
+        <div class="nav-icon">⚙</div>
     </nav>
 
     <script>
-        const input = document.getElementById('aiSearch');
-        const feed = document.getElementById('main-feed');
-        const scanner = document.getElementById('ai-scanner');
+        // --- 1. Трёхмерная Нейросеть (Three.js) ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-        // База знаний ИИ о магазинах Алматы
-        const ALMATY_STORES = [
-            { name: "DOSTYK PLAZA", loc: "мкр. Самал-2, 111", dist: "1.2 км" },
-            { name: "ESENTAI MALL", loc: "пр. Аль-Фараби, 77/7", dist: "3.5 км" },
-            { name: "MEGA ALMA-ATA", loc: "ул. Розыбакиева, 247А", dist: "5.1 км" },
-            { name: "PROMENADE", loc: "пр. Абая, 44А", dist: "2.3 км" },
-            { name: "ZHYBEK ZHOLY ST.", loc: "бутики на Арбате", dist: "0.5 км" }
+        const geometry = new THREE.IcosahedronGeometry(2, 1);
+        const material = new THREE.MeshBasicMaterial({ color: 0xff2d55, wireframe: true, transparent: true, opacity: 0.1 });
+        const sphere = new THREE.Mesh(geometry, material);
+        scene.add(sphere);
+        camera.position.z = 5;
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            sphere.rotation.y += 0.002;
+            sphere.rotation.x += 0.001;
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+        // --- 2. ИИ-Движок Поиска (Semantic Search Engine) ---
+        const ALMATY_RETAIL_DB = [
+            { model: "Nike Air Jordan 1", brand: "Jordan", shop: "Dostyk Plaza", price: 185000, district: "Медеуский" },
+            { model: "Yeezy Boost 350", brand: "Adidas", shop: "Esentai Mall", price: 245000, district: "Бостандыкский" },
+            { model: "Nike Dunk Low", brand: "Nike", shop: "Mega Alma-Ata", price: 85000, district: "Алмалинский" },
+            { model: "New Balance 2002R", brand: "New Balance", shop: "Promenade", price: 115000, district: "Алмалинский" },
+            { model: "Travis Scott x Jordan", brand: "Jordan", shop: "Limelight Almaty", price: 850000, district: "Медеуский" }
         ];
 
-        function formatKZT(num) {
-            return new Intl.NumberFormat('ru-RU').format(num) + ' ₸';
-        }
+        const fuseOptions = {
+            keys: ['model', 'brand', 'shop', 'district'],
+            threshold: 0.3,
+            includeScore: true
+        };
+        const fuse = new Fuse(ALMATY_RETAIL_DB, fuseOptions);
 
-        async function neuralSearch(query) {
-            scanner.style.display = 'flex';
+        // --- 3. Логика Интерфейса ---
+        const input = document.getElementById('aiSearch');
+        const feed = document.getElementById('mainFeed');
+        const status = document.getElementById('ai-status');
+
+        function formatKZT(val) { return new Intl.NumberFormat('ru-RU').format(val) + ' ₸'; }
+
+        async function processAIQuery(query) {
+            status.style.display = 'flex';
             feed.innerHTML = '';
             
-            // Имитация нейронного анализа
-            setTimeout(() => {
-                scanner.style.display = 'none';
-                
-                for(let i = 0; i < 5; i++) {
-                    const store = ALMATY_STORES[i % ALMATY_STORES.length];
-                    const price = formatKZT(Math.floor(Math.random() * (450000 - 65000) + 65000));
-                    
+            // Имитация "размышления" ИИ
+            await new Promise(r => setTimeout(r, 1500));
+            
+            const results = fuse.search(query);
+            status.style.display = 'none';
+
+            if (results.length > 0) {
+                results.forEach((res, i) => {
+                    const item = res.item;
                     const card = document.createElement('div');
-                    card.className = 'card';
+                    card.className = 'kick-card';
+                    card.style.animationDelay = `${i * 0.1}s`;
                     
-                    // Генерируем запрос для Lifestyle фото с учетом бренда
-                    const imgUrl = `https://loremflickr.com/800/1200/sneakers,streetwear,${query}/all?lock=${i + Math.random()}`;
+                    const imgUrl = `https://loremflickr.com/800/1200/sneakers,lifestyle,${item.brand.toLowerCase()}/all?lock=${Math.random()}`;
 
                     card.innerHTML = `
-                        <div class="image-box">
-                            <div class="store-badge">${store.name}</div>
-                            <img src="${imgUrl}" alt="sneaker" onload="this.style.opacity='1'">
-                        </div>
-                        <div class="info">
-                            <div class="model-name">${query} // NEXT_GEN_2027</div>
-                            <div class="price-tag">${price}</div>
-                            <div class="location-text">
-                                📍 ${store.loc} • <span style="color:var(--tech-blue);">${store.dist} от тебя</span>
+                        <div class="img-wrapper">
+                            <img src="${imgUrl}" alt="sneaker" onload="this.style.opacity='1'" style="opacity:0;">
+                            <div class="overlay-data">
+                                <div class="store-chip">${item.shop}</div>
+                                <h2 class="kick-title">${item.model}</h2>
+                                <div class="price-row">
+                                    <span class="price">${formatKZT(item.price)}</span>
+                                    <span class="distance">📍 ${item.district} район</span>
+                                </div>
                             </div>
                         </div>
                     `;
                     feed.appendChild(card);
-                }
-            }, 1800);
+                });
+            } else {
+                feed.innerHTML = `<p style="text-align:center; padding:50px; color:#444;">ИИ не нашел точного совпадения в Алматы. Попробуй другой бренд.</p>`;
+            }
         }
 
         input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && input.value.length > 2) {
-                neuralSearch(input.value);
+            if (e.key === 'Enter' && input.value.length > 1) {
+                processAIQuery(input.value);
             }
         });
     </script>

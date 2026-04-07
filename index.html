@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ANSA_RUN // HYPER_REAL</title>
+    <title>ANSA_RUN // COSMIC_V15</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
@@ -14,50 +14,50 @@
             --blue: #00f2ff;
             --bg: #000000;
             --glass: rgba(255, 255, 255, 0.02);
-            --border: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.08);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body, html { width: 100%; height: 100%; background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; touch-action: none; }
 
-        /* --- UI HUD (Minimalist High-Tech) --- */
-        .hud-v14 {
+        /* HUD - Top Layer */
+        .hud-top {
             position: fixed; top: 0; left: 0; width: 100%;
-            padding: calc(40px + env(safe-area-inset-top)) 25px;
+            padding: calc(45px + env(safe-area-inset-top)) 25px;
             display: flex; justify-content: space-between; z-index: 100; pointer-events: none;
         }
 
-        .stats-block { border-left: 3px solid var(--accent); padding-left: 15px; background: rgba(0,0,0,0.3); backdrop-filter: blur(5px); padding: 10px 15px; border-radius: 0 15px 15px 0; }
-        .score-val { font-family: 'Orbitron', sans-serif; font-size: 32px; color: var(--accent); text-shadow: 0 0 20px var(--accent); }
-        .tech-label { font-size: 8px; letter-spacing: 5px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
+        .data-stream { border-left: 4px solid var(--accent); padding-left: 15px; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); border-radius: 0 10px 10px 0; }
+        .score-val { font-family: 'Orbitron', sans-serif; font-size: 32px; color: var(--accent); text-shadow: 0 0 25px var(--accent); }
+        .tag-tech { font-size: 8px; letter-spacing: 5px; color: #666; text-transform: uppercase; margin-bottom: 5px; }
 
-        /* Bottom Controls */
+        /* HUD - Bottom Layer */
         .hud-bottom {
             position: fixed; bottom: calc(30px + env(safe-area-inset-bottom));
             left: 0; width: 100%; display: flex; flex-direction: column;
             align-items: center; z-index: 200; pointer-events: none;
         }
 
-        .boost-bar {
-            width: 220px; height: 8px; background: rgba(255,255,255,0.05);
-            border-radius: 4px; border: 1px solid var(--border);
-            overflow: hidden; margin-bottom: 15px; position: relative;
+        .skate-status {
+            width: 200px; height: 6px; background: rgba(255,255,255,0.05);
+            border-radius: 3px; border: 1px solid var(--border);
+            overflow: hidden; margin-bottom: 15px;
         }
-        .boost-progress {
-            width: 0%; height: 100%; background: var(--accent);
-            box-shadow: 0 0 20px var(--accent); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .skate-fill {
+            width: 0%; height: 100%; background: var(--blue);
+            box-shadow: 0 0 15px var(--blue); transition: width 0.3s;
         }
 
-        .skate-trigger {
+        .trigger-btn {
             width: 85px; height: 85px; background: var(--glass);
             border: 2px solid var(--border); border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
-            backdrop-filter: blur(20px); pointer-events: all; transition: 0.3s;
+            backdrop-filter: blur(25px); pointer-events: all; transition: 0.3s;
         }
-        .skate-trigger.active { border-color: var(--blue); background: rgba(0, 242, 255, 0.15); box-shadow: 0 0 40px var(--blue); }
-        .skate-trigger.cooldown { opacity: 0.2; transform: scale(0.9); }
+        .trigger-btn.active { border-color: var(--accent); background: rgba(255, 45, 85, 0.2); box-shadow: 0 0 40px var(--accent); }
+        .trigger-btn.cooldown { opacity: 0.2; transform: scale(0.9); }
 
-        /* Screens */
+        /* Overlays */
         .ui-screen {
             position: fixed; inset: 0; background: rgba(0,0,0,0.98);
             display: flex; flex-direction: column; justify-content: center;
@@ -69,7 +69,7 @@
             background: none; border: 1px solid var(--accent);
             color: var(--accent); padding: 20px 65px;
             font-family: 'Orbitron'; font-size: 0.7rem; letter-spacing: 6px;
-            text-transform: uppercase; cursor: pointer; border-radius: 14px;
+            text-transform: uppercase; cursor: pointer; border-radius: 12px;
         }
 
         canvas { display: block; }
@@ -77,60 +77,61 @@
 </head>
 <body>
 
-    <div class="hud-v14">
-        <div class="stats-block">
-            <div class="tech-label">PROTOCOL_DISTANCE</div>
+    <div class="hud-top">
+        <div class="data-stream">
+            <div class="tag-tech">COSMIC_DISTANCE</div>
             <div id="scoreTxt" class="score-val">000000</div>
         </div>
-        <div style="text-align: right; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 15px 0 0 15px;">
-            <div class="tech-label">ALMATY_ENGINE_V14</div>
-            <div id="statusTxt" style="font-size: 10px; color: var(--blue); font-weight: 900; letter-spacing: 1px;">STABLE_MODE</div>
+        <div style="text-align: right; background: rgba(0,0,0,0.4); padding: 10px 15px; border-radius: 10px 0 0 10px;">
+            <div class="tag-tech">SYSTEM_ANSA_V15</div>
+            <div id="statusTxt" style="font-size: 10px; color: var(--blue); font-weight: 900; letter-spacing: 1px;">STARS: ACTIVE</div>
         </div>
     </div>
 
     <div id="menuScreen" class="ui-screen">
-        <h1 style="font-family:'Orbitron'; font-size: 2.5rem; margin-bottom: 5px; letter-spacing: -2px;">ANSA<span style="color:var(--accent)">_</span>HYPER</h1>
-        <p style="font-size: 9px; letter-spacing: 10px; color: #444; margin-bottom: 50px;">NEURAL_RETAIL_OS_2027</p>
-        <button class="btn-ansa" onclick="HyperEngine.init()">Initial Boot</button>
+        <h1 style="font-family:'Orbitron'; font-size: 2.8rem; margin-bottom: 5px; letter-spacing: -2px;">ANSA<span style="color:var(--accent)">_</span>TITAN</h1>
+        <p style="font-size: 9px; letter-spacing: 12px; color: #444; margin-bottom: 50px;">ALMATY_SPACE_RETAIL_2027</p>
+        <button class="btn-ansa" onclick="CosmicEngine.init()">Start Mission</button>
     </div>
 
     <div id="deathScreen" class="ui-screen" style="display: none;">
-        <h2 style="font-family:'Orbitron'; color:var(--accent); font-size: 2rem; margin-bottom: 10px;">SYSTEM_CRASH</h2>
+        <h2 style="font-family:'Orbitron'; color:var(--accent); font-size: 2rem;">CONNECTION_LOST</h2>
         <div id="finalScore" class="score-val" style="font-size: 4.5rem; margin: 30px 0;">0</div>
         <button class="btn-ansa" onclick="location.reload()">Reboot Protocol</button>
     </div>
 
     <div class="hud-bottom">
-        <div class="boost-bar">
-            <div id="boostProgress" class="boost-progress"></div>
+        <div class="skate-status">
+            <div id="skateFill" class="skate-fill"></div>
         </div>
-        <div id="skateBtn" class="skate-trigger">
-            <div id="cdTimer" style="position: absolute; top: -30px; font-weight: bold; color: var(--accent); font-family: 'Orbitron';"></div>
+        <div id="skateBtn" class="trigger-btn">
+            <div id="cdVal" style="position: absolute; top: -35px; font-weight: bold; color: var(--accent); font-family: 'Orbitron';"></div>
             <span style="font-size: 34px;">🛹</span>
         </div>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <canvas id="stage"></canvas>
 
     <script>
         /**
          * =========================================================================
-         * MODULE: HYPER_ENGINE_V14 (Architecture for 2k+ Lines)
+         * MODULE: COSMIC_ENGINE_V15 (Architectural Standard 2000+)
          * =========================================================================
          */
 
-        const HyperEngine = {
+        const CosmicEngine = {
             scene: null, camera: null, renderer: null,
-            player: null, floor: null, lanes: [], obstacles: [], buildings: [],
+            player: null, stars: null, floor: null,
+            lanes: [], obstacles: [], buildings: [],
             
             isRunning: false, score: 0,
-            speed: 0.35, baseSpeed: 0.35, maxSpeed: 1.1,
+            speed: 0.45, baseSpeed: 0.45, maxSpeed: 1.3,
             
-            laneCount: 3, currentLane: 1, targetLane: 1,
-            laneWidth: 5.0, // Увеличенные полосы для гиперреализма
+            laneCount: 3, currentLane: 1, 
+            laneWidth: 5.5, // Увеличил ширину для стабильности
 
             isSkating: false, isCrashed: false, cooldownEnd: 0,
-            SKATE_COOLDOWN: 4000, // ФИКС: Всегда 4 секунды
+            COOLDOWN_TIME: 4000, 
 
             init() {
                 document.getElementById('menuScreen').style.display = 'none';
@@ -143,116 +144,144 @@
 
             setupGraphics() {
                 this.scene = new THREE.Scene();
-                this.scene.fog = new THREE.Fog(0x000000, 30, 150); // Увеличенный туман для дистанции
+                // Глубокий космос
+                this.scene.fog = new THREE.Fog(0x000000, 40, 180);
                 
-                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                // ФИКС ЦЕНТРА И ОБЗОРА: Подняли камеру и расширили FOV
+                this.camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 2000);
                 this.renderer = new THREE.WebGLRenderer({ 
-                    canvas: document.getElementById('gameCanvas'), 
+                    canvas: document.getElementById('stage'), 
                     antialias: true 
                 });
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-                // Студийное освещение для PBR материалов
-                const pLight = new THREE.PointLight(0xff2d55, 10, 150);
-                pLight.position.set(0, 20, 20);
-                this.scene.add(pLight);
+                // Освещение (Космический Неон)
+                const mainLight = new THREE.PointLight(0x00f2ff, 12, 200);
+                mainLight.position.set(0, 30, 20);
+                this.scene.add(mainLight);
                 
-                const topLight = new THREE.DirectionalLight(0xffffff, 0.5);
-                topLight.position.set(0, 50, 0);
-                this.scene.add(topLight);
-                
-                this.scene.add(new THREE.AmbientLight(0x111111, 0.5));
+                const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
+                rimLight.position.set(10, 50, 10);
+                this.scene.add(rimLight);
             },
 
             setupWorld() {
-                this.createHighEndFloor(); // ГИПЕРРЕАЛИСТИЧНЫЙ ПОЛ
-                this.createInterceptorShip(); // ГЕРОЙ V14
+                this.createStarfield(); // ДОБАВЛЕНЫ ЗВЕЗДЫ
+                this.createHighTechTrack(); // ФИКС ТРАССЫ И ЦЕНТРИРОВАНИЯ
+                this.createAdvancedShip(); // УЛУЧШЕННЫЙ КОРАБЛЬ
                 
-                // Декор на большой дистанции
-                for(let i=0; i<80; i++) this.spawnMegaBuilding(i * 20 - 200);
+                for(let i=0; i<70; i++) this.spawnTitanBuilding(i * 25 - 250);
 
-                this.camera.position.set(0, 7, 20);
-                this.camera.lookAt(0, 2, 0);
+                // ИДЕАЛЬНАЯ КАМЕРА: Высоко и далеко, чтобы всё было видно
+                this.camera.position.set(0, 9, 25);
+                this.camera.lookAt(0, 2, 0); // Всегда смотрит в нулевую точку
             },
 
             /**
-             * ГИПЕРРЕАЛИСТИЧНЫЙ ПОЛ: Отражения и Шейдеры
+             * СИСТЕМА ЗВЕЗДНОГО НЕБА
              */
-            createHighEndFloor() {
+            createStarfield() {
+                const starGeo = new THREE.BufferGeometry();
+                const starCount = 5000;
+                const posArray = new Float32Array(starCount * 3);
+
+                for(let i=0; i < starCount * 3; i++) {
+                    posArray[i] = (Math.random() - 0.5) * 800;
+                }
+
+                starGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                const starMat = new THREE.PointsMaterial({ size: 0.7, color: 0xffffff, transparent: true, opacity: 0.8 });
+                this.stars = new THREE.Points(starGeo, starMat);
+                this.scene.add(this.stars);
+            },
+
+            /**
+             * ТРАССА: Идеально симметричная и понятная
+             */
+            createHighTechTrack() {
                 this.lanes.forEach(l => this.scene.remove(l));
                 this.lanes = [];
 
-                const roadGeo = new THREE.PlaneGeometry(50, 500);
+                const roadGeo = new THREE.PlaneGeometry(60, 600);
                 const roadMat = new THREE.MeshStandardMaterial({ 
-                    color: 0x020202, 
-                    roughness: 0.1, 
-                    metalness: 0.9,
+                    color: 0x020202, roughness: 0.05, metalness: 1,
                     emissive: 0x050505
                 });
                 const road = new THREE.Mesh(roadGeo, roadMat);
                 road.rotation.x = -Math.PI / 2;
                 this.scene.add(road);
 
-                // Отрисовка полос с неоновым свечением
+                // Отрисовка полос
                 for(let i = 0; i < this.laneCount; i++) {
+                    // ФОРМУЛА СИММЕТРИИ
                     const xPos = (i - (this.laneCount - 1) / 2) * this.laneWidth;
                     
-                    const neonGeo = new THREE.PlaneGeometry(this.laneWidth - 0.2, 500);
-                    const neonMat = new THREE.MeshBasicMaterial({ 
-                        color: (i === 1) ? 0x00f2ff : 0x0a0a0a,
-                        transparent: true,
-                        opacity: 0.1
+                    const laneGeo = new THREE.PlaneGeometry(this.laneWidth - 0.5, 600);
+                    const laneMat = new THREE.MeshBasicMaterial({ 
+                        color: 0x00f2ff, transparent: true, opacity: 0.05
                     });
-                    const lane = new THREE.Mesh(neonGeo, neonMat);
-                    lane.rotation.x = -Math.PI / 2;
-                    lane.position.set(xPos, 0.02, 0);
-                    this.scene.add(lane);
-                    this.lanes.push(lane);
+                    const l = new THREE.Mesh(laneGeo, laneMat);
+                    l.rotation.x = -Math.PI / 2;
+                    l.position.set(xPos, 0.02, 0);
+                    this.scene.add(l);
+                    this.lanes.push(l);
 
-                    // Лазерные границы
-                    const laserGeo = new THREE.PlaneGeometry(0.15, 500);
-                    const laserMat = new THREE.MeshBasicMaterial({ color: 0xff2d55 });
-                    const l1 = new THREE.Mesh(laserGeo, laserMat);
-                    l1.rotation.x = -Math.PI/2;
-                    l1.position.set(xPos - this.laneWidth/2, 0.05, 0);
-                    this.scene.add(l1);
+                    // Сверхмощные неоновые бордюры
+                    const edgeGeo = new THREE.PlaneGeometry(0.2, 600);
+                    const edgeMat = new THREE.MeshBasicMaterial({ color: (i === this.currentLane) ? 0x00f2ff : 0xff2d55 });
+                    const edgeL = new THREE.Mesh(edgeGeo, edgeMat);
+                    edgeL.rotation.x = -Math.PI / 2;
+                    edgeL.position.set(xPos - this.laneWidth/2, 0.05, 0);
+                    this.scene.add(edgeL);
+
+                    const edgeR = edgeL.clone();
+                    edgeR.position.x = xPos + this.laneWidth/2;
+                    this.scene.add(edgeR);
                 }
+
+                const grid = new THREE.GridHelper(600, 80, 0x111111, 0x050505);
+                grid.position.y = 0.01;
+                this.scene.add(grid);
             },
 
-            createInterceptorShip() {
-                // Высокополигональный корабль Interceptor V14
-                const ship = new THREE.Group();
+            createAdvancedShip() {
+                // TITAN SHIP V15
+                const group = new THREE.Group();
                 
-                // Основной корпус (Стекло + Металл)
-                const body = new THREE.Mesh(new THREE.ConeGeometry(0.7, 2.5, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: 0.2 }));
-                body.rotation.x = Math.PI / 2;
-                ship.add(body);
+                // Главный фюзеляж (Сложная форма)
+                const body = new THREE.Mesh(
+                    new THREE.IcosahedronGeometry(0.8, 0),
+                    new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: 0.1 })
+                );
+                body.scale.set(1, 0.5, 2.5);
+                group.add(body);
 
-                // Крылья-лезвия
-                const wingGeo = new THREE.BoxGeometry(3.5, 0.1, 1.2);
-                const wingMat = new THREE.MeshStandardMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 2 });
-                const wings = new THREE.Mesh(wingGeo, wingMat);
-                wings.position.set(0, -0.2, 0.5);
-                ship.add(wings);
+                // Кокпит (Стекло)
+                const glass = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00f2ff }));
+                glass.position.set(0, 0.3, 0.5);
+                group.add(glass);
 
-                // Двигатели (С реактивным свечением)
-                const engineGeo = new THREE.CylinderGeometry(0.3, 0.4, 1.0, 16);
-                const engineMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-                const eng1 = new THREE.Mesh(engineGeo, engineMat);
-                eng1.rotation.x = Math.PI/2; eng1.position.set(0.8, -0.4, 1.0);
-                ship.add(eng1);
+                // Крылья-Лезвия
+                const wings = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.1, 1.5), new THREE.MeshStandardMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 2 }));
+                wings.position.set(0, -0.2, 0.8);
+                group.add(wings);
+
+                // Турбины
+                const t1 = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 1.2), new THREE.MeshPhongMaterial({ color: 0x222222 }));
+                t1.rotation.x = Math.PI/2; t1.position.set(1.0, -0.4, 1.2);
+                group.add(t1);
                 
-                const eng2 = eng1.clone(); eng2.position.x = -0.8;
-                ship.add(eng2);
+                const t2 = t1.clone(); t2.position.x = -1.0;
+                group.add(t2);
 
-                this.player = ship;
-                this.player.position.set(0, 1.5, 8);
+                this.player = group;
+                this.player.position.set(0, 1.8, 10); // Начальная позиция точно по центру
                 this.scene.add(this.player);
             },
 
             setupControls() {
-                // ПРЕЦИЗИОННОЕ УПРАВЛЕНИЕ: 1 Тап = 1 Полоса
+                // ПРЕЦИЗИОННЫЙ ВВОД (1 ТАП = 1 ПОЛОСА)
                 window.addEventListener('touchstart', (e) => {
                     if (!this.isRunning) return;
                     const touchX = e.touches[0].clientX;
@@ -275,47 +304,50 @@
                 if (!this.isRunning) return;
                 requestAnimationFrame(() => this.animate());
 
-                // Эволюция мира
-                if (this.score > 500 && this.laneCount < 4) { this.laneCount = 4; this.createHighEndFloor(); }
-                if (this.score > 1500 && this.laneCount < 5) { this.laneCount = 5; this.createHighEndFloor(); }
+                // АДАПТИВНОСТЬ ПЕРСПЕКТИВЫ
+                if (this.score > 400 && this.laneCount < 4) { this.laneCount = 4; this.createHighTechTrack(); this.adjustView(4); }
+                if (this.score > 1200 && this.laneCount < 5) { this.laneCount = 5; this.createHighTechTrack(); this.adjustView(5); }
 
                 const frameSpeed = this.isSkating ? this.speed * 1.25 : this.speed;
                 this.score += frameSpeed;
-                this.speed += 0.00008;
+                this.speed += 0.00007;
 
                 document.getElementById('scoreTxt').innerText = Math.floor(this.score).toString().padStart(6, '0');
 
-                // Плавная физика игрока
+                // ПЛАВНАЯ ФИЗИКА (БЕЗ СМЕЩЕНИЯ ЦЕНТРА)
                 const targetX = (this.currentLane - (this.laneCount - 1) / 2) * this.laneWidth;
-                this.player.position.x += (targetX - this.player.position.x) * 0.15;
+                this.player.position.x += (targetX - this.player.position.x) * 0.16;
                 this.player.rotation.z = (this.player.position.x - targetX) * 0.45;
-                this.player.rotation.y = Math.sin(Date.now()*0.002)*0.1;
+                this.player.rotation.y = Math.sin(Date.now()*0.003)*0.08;
 
-                // Кулдаун скейта (Всегда 4 секунды)
+                // Звезды и параллакс
+                this.stars.rotation.y += 0.0005;
+                this.stars.position.z += frameSpeed * 2;
+                if (this.stars.position.z > 200) this.stars.position.z = -200;
+
+                // Кулдаун
                 if (this.isCrashed) {
                     const rem = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
                     if (rem > 0) {
-                        document.getElementById('cdTimer').innerText = rem + "S";
-                        document.getElementById('boostProgress').style.width = '0%';
-                        document.getElementById('skateBtn').classList.add('cooldown');
+                        document.getElementById('cdVal').innerText = rem + "S";
+                        document.getElementById('skateFill').style.width = '0%';
                     } else {
                         this.isCrashed = false;
-                        document.getElementById('cdTimer').innerText = "";
+                        document.getElementById('cdVal').innerText = "";
                         document.getElementById('skateBtn').classList.remove('cooldown');
                     }
                 } else {
-                    document.getElementById('boostProgress').style.width = this.isSkating ? '100%' : '50%';
+                    document.getElementById('skateFill').style.width = this.isSkating ? '100%' : '50%';
                 }
 
-                // СПАВН ОБЪЕКТОВ ИЗДАЛЕКА (Дистанция -180)
-                if (Math.random() < 0.02 + (this.score / 100000)) this.spawnObstacleAtDistance();
+                // СПАВН ОБЪЕКТОВ ИЗ ДАЛИ (180м)
+                if (Math.random() < 0.025 + (this.score / 60000)) this.spawnObstacleAtHorizon();
 
                 for (let i = this.obstacles.length - 1; i >= 0; i--) {
                     const o = this.obstacles[i];
-                    o.position.z += frameSpeed * 4;
+                    o.position.z += frameSpeed * 4.5;
 
-                    // Коллизия
-                    if (this.player.position.distanceTo(o.position) < 1.5) {
+                    if (this.player.position.distanceTo(o.position) < 1.8) {
                         if (this.isSkating) {
                             this.handleImpact();
                             this.scene.remove(o);
@@ -324,48 +356,52 @@
                             this.gameOver();
                         }
                     }
-                    if (o.position.z > 30) { this.scene.remove(o); this.obstacles.splice(i, 1); }
+                    if (o.position.z > 35) { this.scene.remove(o); this.obstacles.splice(i, 1); }
                 }
 
-                // Фоновое окружение
                 this.buildings.forEach(b => {
                     b.position.z += frameSpeed * 3;
-                    if (b.position.z > 50) b.position.z = -200;
+                    if (b.position.z > 50) b.position.z = -250;
                 });
 
                 this.renderer.render(this.scene, this.camera);
             },
 
-            spawnObstacleAtDistance() {
-                // Появление на горизонте (-180 метров)
+            adjustView(n) {
+                // Плавное отдаление при расширении
+                this.camera.position.z = 25 + (n - 3) * 3;
+                this.camera.position.y = 9 + (n - 3) * 1.2;
+                this.camera.fov = 80 + (n - 3) * 3;
+                this.camera.updateProjectionMatrix();
+            },
+
+            spawnObstacleAtHorizon() {
                 const lane = Math.floor(Math.random() * this.laneCount);
-                const geo = new THREE.BoxGeometry(1.8, 1.8, 1.8);
-                const mat = new THREE.MeshStandardMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 2 });
+                const geo = new THREE.BoxGeometry(2.0, 2.0, 2.0);
+                const mat = new THREE.MeshStandardMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 2.5 });
                 const cube = new THREE.Mesh(geo, mat);
-                
                 const xPos = (lane - (this.laneCount - 1) / 2) * this.laneWidth;
-                cube.position.set(xPos, 0.9, -180);
+                cube.position.set(xPos, 1.0, -200); // Появление на горизонте
                 this.scene.add(cube);
                 this.obstacles.push(cube);
             },
 
-            spawnMegaBuilding(z) {
-                const h = 20 + Math.random() * 50;
+            spawnTitanBuilding(z) {
+                const h = 25 + Math.random() * 60;
                 const b = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, h, 8),
+                    new THREE.BoxGeometry(10, h, 10),
                     new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.1, metalness: 1 })
                 );
-                b.position.set(Math.random() > 0.5 ? 40 : -40, h/2, z);
+                b.position.set(Math.random() > 0.5 ? 50 : -50, h/2, z);
                 this.scene.add(b);
                 this.buildings.push(b);
             },
 
             handleImpact() {
-                this.isSkating = false; 
-                this.isCrashed = true;
-                // Всегда 4 секунды
-                this.cooldownEnd = Date.now() + this.SKATE_COOLDOWN;
+                this.isSkating = false; this.isCrashed = true;
+                this.cooldownEnd = Date.now() + this.COOLDOWN_TIME;
                 document.getElementById('skateBtn').classList.remove('active');
+                document.getElementById('skateBtn').classList.add('cooldown');
             },
 
             gameOver() {

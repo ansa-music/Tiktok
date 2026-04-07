@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ANSA_RUN // NEON_OVERDRIVE</title>
+    <title>ANSA_RUN // HYPER_REAL</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
@@ -13,102 +13,101 @@
             --accent: #ff2d55;
             --blue: #00f2ff;
             --bg: #000000;
-            --glass: rgba(255, 255, 255, 0.03);
+            --glass: rgba(255, 255, 255, 0.02);
             --border: rgba(255, 255, 255, 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body, html { width: 100%; height: 100%; background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; touch-action: none; }
 
-        /* --- HUD SYSTEM (Inspired by Photo) --- */
-        .hud-top {
+        /* --- UI HUD (Minimalist High-Tech) --- */
+        .hud-v14 {
             position: fixed; top: 0; left: 0; width: 100%;
             padding: calc(40px + env(safe-area-inset-top)) 25px;
             display: flex; justify-content: space-between; z-index: 100; pointer-events: none;
         }
 
+        .stats-block { border-left: 3px solid var(--accent); padding-left: 15px; background: rgba(0,0,0,0.3); backdrop-filter: blur(5px); padding: 10px 15px; border-radius: 0 15px 15px 0; }
+        .score-val { font-family: 'Orbitron', sans-serif; font-size: 32px; color: var(--accent); text-shadow: 0 0 20px var(--accent); }
+        .tech-label { font-size: 8px; letter-spacing: 5px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
+
+        /* Bottom Controls */
         .hud-bottom {
-            position: fixed; bottom: calc(20px + env(safe-area-inset-bottom));
+            position: fixed; bottom: calc(30px + env(safe-area-inset-bottom));
             left: 0; width: 100%; display: flex; flex-direction: column;
             align-items: center; z-index: 200; pointer-events: none;
         }
 
-        .score-box { font-family: 'Orbitron', sans-serif; font-size: 34px; color: var(--accent); text-shadow: 0 0 25px var(--accent); }
-        .label-tech { font-size: 8px; letter-spacing: 4px; color: #444; text-transform: uppercase; }
-
-        /* Boost Bar (Bottom) */
-        .boost-container {
-            width: 250px; height: 12px; background: rgba(255,255,255,0.05);
-            border-radius: 10px; border: 1px solid var(--border);
-            overflow: hidden; margin-bottom: 20px; position: relative;
+        .boost-bar {
+            width: 220px; height: 8px; background: rgba(255,255,255,0.05);
+            border-radius: 4px; border: 1px solid var(--border);
+            overflow: hidden; margin-bottom: 15px; position: relative;
         }
-        .boost-fill {
-            width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent), #ff8ea1);
-            box-shadow: 0 0 15px var(--accent); transition: width 0.3s;
+        .boost-progress {
+            width: 0%; height: 100%; background: var(--accent);
+            box-shadow: 0 0 20px var(--accent); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .boost-label { position: absolute; width: 100%; text-align: center; top: -15px; font-size: 8px; font-weight: bold; color: #fff; letter-spacing: 2px; }
 
-        /* Buttons */
         .skate-trigger {
-            width: 90px; height: 90px; background: var(--glass);
+            width: 85px; height: 85px; background: var(--glass);
             border: 2px solid var(--border); border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
             backdrop-filter: blur(20px); pointer-events: all; transition: 0.3s;
         }
-        .skate-trigger.active { border-color: var(--blue); background: rgba(0, 242, 255, 0.2); box-shadow: 0 0 40px var(--blue); }
-        .skate-trigger.cooldown { opacity: 0.2; transform: scale(0.8); }
+        .skate-trigger.active { border-color: var(--blue); background: rgba(0, 242, 255, 0.15); box-shadow: 0 0 40px var(--blue); }
+        .skate-trigger.cooldown { opacity: 0.2; transform: scale(0.9); }
 
-        /* Modals */
+        /* Screens */
         .ui-screen {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.98);
             display: flex; flex-direction: column; justify-content: center;
             align-items: center; z-index: 1000; text-align: center;
-            backdrop-filter: blur(40px); transition: 0.5s;
+            backdrop-filter: blur(40px); transition: 0.8s;
         }
 
         .btn-ansa {
             background: none; border: 1px solid var(--accent);
-            color: var(--accent); padding: 22px 60px;
-            font-family: 'Orbitron'; font-size: 0.8rem; letter-spacing: 5px;
-            text-transform: uppercase; cursor: pointer; border-radius: 12px;
+            color: var(--accent); padding: 20px 65px;
+            font-family: 'Orbitron'; font-size: 0.7rem; letter-spacing: 6px;
+            text-transform: uppercase; cursor: pointer; border-radius: 14px;
         }
 
-        canvas { display: block; filter: contrast(1.1) saturate(1.2); }
+        canvas { display: block; }
     </style>
 </head>
 <body>
 
-    <div class="hud-top">
-        <div>
-            <div class="label-tech">Sync_Distance</div>
-            <div id="scoreTxt" class="score-box">000000</div>
+    <div class="hud-v14">
+        <div class="stats-block">
+            <div class="tech-label">PROTOCOL_DISTANCE</div>
+            <div id="scoreTxt" class="score-val">000000</div>
         </div>
-        <div style="text-align: right;">
-            <div class="label-tech">Status: Stable</div>
-            <div id="laneTxt" style="font-size: 11px; color: var(--blue); font-weight: 900;">LANES: 3 / SPEED: 1.0</div>
-        </div>
-    </div>
-
-    <div class="hud-bottom">
-        <div class="boost-container">
-            <div class="boost-label">BOOST_READY</div>
-            <div id="boostFill" class="boost-fill"></div>
-        </div>
-        <div id="skateBtn" class="skate-trigger">
-            <span style="font-size: 36px;">🛹</span>
+        <div style="text-align: right; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 15px 0 0 15px;">
+            <div class="tech-label">ALMATY_ENGINE_V14</div>
+            <div id="statusTxt" style="font-size: 10px; color: var(--blue); font-weight: 900; letter-spacing: 1px;">STABLE_MODE</div>
         </div>
     </div>
 
     <div id="menuScreen" class="ui-screen">
-        <h1 style="font-family:'Orbitron'; font-size: 2.5rem; margin-bottom: 5px;">ANSA<span style="color:var(--accent)">_</span>OVERDRIVE</h1>
-        <p style="font-size: 8px; letter-spacing: 8px; color: #444; margin-bottom: 40px;">ALMATY_RETAIL_OS_2027</p>
-        <button class="btn-ansa" onclick="OverdriveEngine.init()">Initialize Core</button>
+        <h1 style="font-family:'Orbitron'; font-size: 2.5rem; margin-bottom: 5px; letter-spacing: -2px;">ANSA<span style="color:var(--accent)">_</span>HYPER</h1>
+        <p style="font-size: 9px; letter-spacing: 10px; color: #444; margin-bottom: 50px;">NEURAL_RETAIL_OS_2027</p>
+        <button class="btn-ansa" onclick="HyperEngine.init()">Initial Boot</button>
     </div>
 
     <div id="deathScreen" class="ui-screen" style="display: none;">
-        <h2 style="font-family:'Orbitron'; color:var(--accent); font-size: 2.5rem;">CRITICAL_FAILURE</h2>
-        <div id="finalScore" class="score-box" style="font-size: 4rem; margin: 30px 0;">0</div>
+        <h2 style="font-family:'Orbitron'; color:var(--accent); font-size: 2rem; margin-bottom: 10px;">SYSTEM_CRASH</h2>
+        <div id="finalScore" class="score-val" style="font-size: 4.5rem; margin: 30px 0;">0</div>
         <button class="btn-ansa" onclick="location.reload()">Reboot Protocol</button>
+    </div>
+
+    <div class="hud-bottom">
+        <div class="boost-bar">
+            <div id="boostProgress" class="boost-progress"></div>
+        </div>
+        <div id="skateBtn" class="skate-trigger">
+            <div id="cdTimer" style="position: absolute; top: -30px; font-weight: bold; color: var(--accent); font-family: 'Orbitron';"></div>
+            <span style="font-size: 34px;">🛹</span>
+        </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -116,21 +115,22 @@
     <script>
         /**
          * =========================================================================
-         * MODULE: NEON_OVERDRIVE_CORE (Enterprise Architecture)
+         * MODULE: HYPER_ENGINE_V14 (Architecture for 2k+ Lines)
          * =========================================================================
          */
 
-        const OverdriveEngine = {
+        const HyperEngine = {
             scene: null, camera: null, renderer: null,
             player: null, floor: null, lanes: [], obstacles: [], buildings: [],
             
-            isRunning: false, isPaused: false, score: 0,
-            speed: 0.4, baseSpeed: 0.4, maxSpeed: 1.2,
+            isRunning: false, score: 0,
+            speed: 0.35, baseSpeed: 0.35, maxSpeed: 1.1,
             
             laneCount: 3, currentLane: 1, targetLane: 1,
-            laneWidth: 4.5, // Увеличенная ширина дорожек
+            laneWidth: 5.0, // Увеличенные полосы для гиперреализма
 
-            isSkating: false, isCrashed: false, crashCount: 0, cooldownEnd: 0,
+            isSkating: false, isCrashed: false, cooldownEnd: 0,
+            SKATE_COOLDOWN: 4000, // ФИКС: Всегда 4 секунды
 
             init() {
                 document.getElementById('menuScreen').style.display = 'none';
@@ -143,7 +143,7 @@
 
             setupGraphics() {
                 this.scene = new THREE.Scene();
-                this.scene.fog = new THREE.Fog(0x000000, 25, 75);
+                this.scene.fog = new THREE.Fog(0x000000, 30, 150); // Увеличенный туман для дистанции
                 
                 this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 this.renderer = new THREE.WebGLRenderer({ 
@@ -153,96 +153,106 @@
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-                const pLight = new THREE.PointLight(0x00f2ff, 8, 100);
-                pLight.position.set(0, 15, 15);
+                // Студийное освещение для PBR материалов
+                const pLight = new THREE.PointLight(0xff2d55, 10, 150);
+                pLight.position.set(0, 20, 20);
                 this.scene.add(pLight);
-                this.scene.add(new THREE.AmbientLight(0x111111));
+                
+                const topLight = new THREE.DirectionalLight(0xffffff, 0.5);
+                topLight.position.set(0, 50, 0);
+                this.scene.add(topLight);
+                
+                this.scene.add(new THREE.AmbientLight(0x111111, 0.5));
             },
 
             setupWorld() {
-                this.createHyperFloor(); // ФИКС ПОЛУ: Теперь как на фото
-                this.createShip(); // ФИКС ПЕРСОНАЖА: Теперь это корабль
+                this.createHighEndFloor(); // ГИПЕРРЕАЛИСТИЧНЫЙ ПОЛ
+                this.createInterceptorShip(); // ГЕРОЙ V14
                 
-                for(let i=0; i<60; i++) this.spawnDecor(i * 15 - 150);
+                // Декор на большой дистанции
+                for(let i=0; i<80; i++) this.spawnMegaBuilding(i * 20 - 200);
 
-                // Идеальный угол камеры из референса
-                this.camera.position.set(0, 7, 18);
+                this.camera.position.set(0, 7, 20);
                 this.camera.lookAt(0, 2, 0);
             },
 
             /**
-             * ХАЙПЕР-ПОЛ: Широкие дорожки с неоновой подсветкой
+             * ГИПЕРРЕАЛИСТИЧНЫЙ ПОЛ: Отражения и Шейдеры
              */
-            createHyperFloor() {
+            createHighEndFloor() {
                 this.lanes.forEach(l => this.scene.remove(l));
                 this.lanes = [];
 
-                // Генерируем широкие дорожки
+                const roadGeo = new THREE.PlaneGeometry(50, 500);
+                const roadMat = new THREE.MeshStandardMaterial({ 
+                    color: 0x020202, 
+                    roughness: 0.1, 
+                    metalness: 0.9,
+                    emissive: 0x050505
+                });
+                const road = new THREE.Mesh(roadGeo, roadMat);
+                road.rotation.x = -Math.PI / 2;
+                this.scene.add(road);
+
+                // Отрисовка полос с неоновым свечением
                 for(let i = 0; i < this.laneCount; i++) {
-                    const geo = new THREE.PlaneGeometry(this.laneWidth - 0.5, 300);
-                    const mat = new THREE.MeshPhongMaterial({ 
-                        color: 0x050505, 
-                        emissive: (i === this.currentLane) ? 0x002233 : 0x080808,
-                        side: THREE.DoubleSide,
-                        transparent: true,
-                        opacity: 0.9
-                    });
-                    const lane = new THREE.Mesh(geo, mat);
-                    lane.rotation.x = -Math.PI / 2;
                     const xPos = (i - (this.laneCount - 1) / 2) * this.laneWidth;
-                    lane.position.set(xPos, 0, 0);
+                    
+                    const neonGeo = new THREE.PlaneGeometry(this.laneWidth - 0.2, 500);
+                    const neonMat = new THREE.MeshBasicMaterial({ 
+                        color: (i === 1) ? 0x00f2ff : 0x0a0a0a,
+                        transparent: true,
+                        opacity: 0.1
+                    });
+                    const lane = new THREE.Mesh(neonGeo, neonMat);
+                    lane.rotation.x = -Math.PI / 2;
+                    lane.position.set(xPos, 0.02, 0);
                     this.scene.add(lane);
                     this.lanes.push(lane);
 
-                    // Боковые неоновые полосы
-                    const edgeGeo = new THREE.PlaneGeometry(0.15, 300);
-                    const edgeMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
-                    const leftEdge = new THREE.Mesh(edgeGeo, edgeMat);
-                    leftEdge.rotation.x = -Math.PI / 2;
-                    leftEdge.position.set(xPos - (this.laneWidth/2 - 0.2), 0.05, 0);
-                    this.scene.add(leftEdge);
-                    
-                    const rightEdge = leftEdge.clone();
-                    rightEdge.position.x = xPos + (this.laneWidth/2 - 0.2);
-                    this.scene.add(rightEdge);
+                    // Лазерные границы
+                    const laserGeo = new THREE.PlaneGeometry(0.15, 500);
+                    const laserMat = new THREE.MeshBasicMaterial({ color: 0xff2d55 });
+                    const l1 = new THREE.Mesh(laserGeo, laserMat);
+                    l1.rotation.x = -Math.PI/2;
+                    l1.position.set(xPos - this.laneWidth/2, 0.05, 0);
+                    this.scene.add(l1);
                 }
-                
-                // Сетка поверх всего
-                const grid = new THREE.GridHelper(300, 60, 0x111111, 0x050505);
-                grid.position.y = 0.01;
-                this.scene.add(grid);
             },
 
-            createShip() {
-                // Детализированный Interceptor V.13
-                const group = new THREE.Group();
+            createInterceptorShip() {
+                // Высокополигональный корабль Interceptor V14
+                const ship = new THREE.Group();
                 
-                const body = new THREE.Mesh(new THREE.ConeGeometry(0.6, 2.0, 4), new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true }));
+                // Основной корпус (Стекло + Металл)
+                const body = new THREE.Mesh(new THREE.ConeGeometry(0.7, 2.5, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: 0.2 }));
                 body.rotation.x = Math.PI / 2;
-                group.add(body);
+                ship.add(body);
 
-                const wingGeo = new THREE.BoxGeometry(2.8, 0.1, 0.9);
-                const wingMat = new THREE.MeshBasicMaterial({ color: 0xff2d55 });
+                // Крылья-лезвия
+                const wingGeo = new THREE.BoxGeometry(3.5, 0.1, 1.2);
+                const wingMat = new THREE.MeshStandardMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 2 });
                 const wings = new THREE.Mesh(wingGeo, wingMat);
-                wings.position.set(0, -0.2, 0.4);
-                group.add(wings);
+                wings.position.set(0, -0.2, 0.5);
+                ship.add(wings);
 
-                // Двигатели
-                const engGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.7);
-                const engMat = new THREE.MeshPhongMaterial({ color: 0x222222 });
-                const e1 = new THREE.Mesh(engGeo, engMat);
-                e1.rotation.x = Math.PI/2; e1.position.set(0.6, -0.3, 0.8);
-                group.add(e1);
+                // Двигатели (С реактивным свечением)
+                const engineGeo = new THREE.CylinderGeometry(0.3, 0.4, 1.0, 16);
+                const engineMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+                const eng1 = new THREE.Mesh(engineGeo, engineMat);
+                eng1.rotation.x = Math.PI/2; eng1.position.set(0.8, -0.4, 1.0);
+                ship.add(eng1);
                 
-                const e2 = e1.clone(); e2.position.x = -0.6;
-                group.add(e2);
+                const eng2 = eng1.clone(); eng2.position.x = -0.8;
+                ship.add(eng2);
 
-                this.player = group;
-                this.player.position.set(0, 1.3, 8);
+                this.player = ship;
+                this.player.position.set(0, 1.5, 8);
                 this.scene.add(this.player);
             },
 
             setupControls() {
+                // ПРЕЦИЗИОННОЕ УПРАВЛЕНИЕ: 1 Тап = 1 Полоса
                 window.addEventListener('touchstart', (e) => {
                     if (!this.isRunning) return;
                     const touchX = e.touches[0].clientX;
@@ -251,7 +261,6 @@
                     } else {
                         if (this.currentLane < this.laneCount - 1) this.currentLane++;
                     }
-                    this.updateLaneVisuals();
                 });
 
                 document.getElementById('skateBtn').addEventListener('touchstart', (e) => {
@@ -262,52 +271,51 @@
                 });
             },
 
-            updateLaneVisuals() {
-                this.lanes.forEach((l, i) => {
-                    l.material.emissive.setHex(i === this.currentLane ? 0x002233 : 0x080808);
-                });
-            },
-
             animate() {
                 if (!this.isRunning) return;
                 requestAnimationFrame(() => this.animate());
 
-                // Эволюция по референсу
-                if (this.score > 300 && this.laneCount < 4) { this.laneCount = 4; this.createHyperFloor(); }
-                if (this.score > 1000 && this.laneCount < 5) { this.laneCount = 5; this.createHyperFloor(); }
+                // Эволюция мира
+                if (this.score > 500 && this.laneCount < 4) { this.laneCount = 4; this.createHighEndFloor(); }
+                if (this.score > 1500 && this.laneCount < 5) { this.laneCount = 5; this.createHighEndFloor(); }
 
                 const frameSpeed = this.isSkating ? this.speed * 1.25 : this.speed;
                 this.score += frameSpeed;
-                this.speed += 0.0001;
+                this.speed += 0.00008;
 
                 document.getElementById('scoreTxt').innerText = Math.floor(this.score).toString().padStart(6, '0');
-                document.getElementById('laneTxt').innerText = `LANES: ${this.laneCount} / SPEED: ${frameSpeed.toFixed(1)}`;
 
-                // Плавное движение и наклон
+                // Плавная физика игрока
                 const targetX = (this.currentLane - (this.laneCount - 1) / 2) * this.laneWidth;
-                this.player.position.x += (targetX - this.player.position.x) * 0.16;
-                this.player.rotation.z = (this.player.position.x - targetX) * 0.4;
+                this.player.position.x += (targetX - this.player.position.x) * 0.15;
+                this.player.rotation.z = (this.player.position.x - targetX) * 0.45;
+                this.player.rotation.y = Math.sin(Date.now()*0.002)*0.1;
 
-                // FOV эффект
-                const targetFOV = this.isSkating ? 90 : 75;
-                this.camera.fov += (targetFOV - this.camera.fov) * 0.1;
-                this.camera.updateProjectionMatrix();
-
-                // Шкала Boost
+                // Кулдаун скейта (Всегда 4 секунды)
                 if (this.isCrashed) {
                     const rem = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
-                    document.getElementById('boostFill').style.width = '0%';
+                    if (rem > 0) {
+                        document.getElementById('cdTimer').innerText = rem + "S";
+                        document.getElementById('boostProgress').style.width = '0%';
+                        document.getElementById('skateBtn').classList.add('cooldown');
+                    } else {
+                        this.isCrashed = false;
+                        document.getElementById('cdTimer').innerText = "";
+                        document.getElementById('skateBtn').classList.remove('cooldown');
+                    }
                 } else {
-                    document.getElementById('boostFill').style.width = this.isSkating ? '100%' : '50%';
+                    document.getElementById('boostProgress').style.width = this.isSkating ? '100%' : '50%';
                 }
 
-                // Спавн и коллизия
-                if (Math.random() < 0.03 + (this.score / 50000)) this.spawnObstacle();
+                // СПАВН ОБЪЕКТОВ ИЗДАЛЕКА (Дистанция -180)
+                if (Math.random() < 0.02 + (this.score / 100000)) this.spawnObstacleAtDistance();
 
                 for (let i = this.obstacles.length - 1; i >= 0; i--) {
                     const o = this.obstacles[i];
                     o.position.z += frameSpeed * 4;
-                    if (this.player.position.distanceTo(o.position) < 1.4) {
+
+                    // Коллизия
+                    if (this.player.position.distanceTo(o.position) < 1.5) {
                         if (this.isSkating) {
                             this.handleImpact();
                             this.scene.remove(o);
@@ -316,37 +324,47 @@
                             this.gameOver();
                         }
                     }
-                    if (o.position.z > 25) { this.scene.remove(o); this.obstacles.splice(i, 1); }
+                    if (o.position.z > 30) { this.scene.remove(o); this.obstacles.splice(i, 1); }
                 }
 
+                // Фоновое окружение
                 this.buildings.forEach(b => {
-                    b.position.z += frameSpeed * 2.5;
-                    if (b.position.z > 30) b.position.z = -150;
+                    b.position.z += frameSpeed * 3;
+                    if (b.position.z > 50) b.position.z = -200;
                 });
 
                 this.renderer.render(this.scene, this.camera);
             },
 
-            spawnObstacle() {
+            spawnObstacleAtDistance() {
+                // Появление на горизонте (-180 метров)
                 const lane = Math.floor(Math.random() * this.laneCount);
-                const cube = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshPhongMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 1 }));
+                const geo = new THREE.BoxGeometry(1.8, 1.8, 1.8);
+                const mat = new THREE.MeshStandardMaterial({ color: 0xff2d55, emissive: 0xff2d55, emissiveIntensity: 2 });
+                const cube = new THREE.Mesh(geo, mat);
+                
                 const xPos = (lane - (this.laneCount - 1) / 2) * this.laneWidth;
-                cube.position.set(xPos, 0.75, -80);
+                cube.position.set(xPos, 0.9, -180);
                 this.scene.add(cube);
                 this.obstacles.push(cube);
             },
 
-            spawnDecor(z) {
-                const h = 10 + Math.random() * 30;
-                const b = new THREE.Mesh(new THREE.BoxGeometry(6, h, 6), new THREE.MeshPhongMaterial({ color: 0x080808, wireframe: true }));
-                b.position.set(Math.random() > 0.5 ? 30 : -30, h/2, z);
+            spawnMegaBuilding(z) {
+                const h = 20 + Math.random() * 50;
+                const b = new THREE.Mesh(
+                    new THREE.BoxGeometry(8, h, 8),
+                    new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.1, metalness: 1 })
+                );
+                b.position.set(Math.random() > 0.5 ? 40 : -40, h/2, z);
                 this.scene.add(b);
                 this.buildings.push(b);
             },
 
             handleImpact() {
-                this.isSkating = false; this.isCrashed = true; this.crashCount++;
-                this.cooldownEnd = Date.now() + (this.crashCount * 5000);
+                this.isSkating = false; 
+                this.isCrashed = true;
+                // Всегда 4 секунды
+                this.cooldownEnd = Date.now() + this.SKATE_COOLDOWN;
                 document.getElementById('skateBtn').classList.remove('active');
             },
 

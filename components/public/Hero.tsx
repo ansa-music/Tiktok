@@ -1,53 +1,102 @@
-import { ArrowDown, MessageCircle } from "lucide-react";
+import { ArrowDown, MessageCircle, Sparkles, Zap } from "lucide-react";
+import type { Service } from "@/lib/types";
+import type { SiteContent } from "@/lib/content";
+import { getServiceIcon } from "@/lib/icons";
 
 interface Props {
   siteName: string;
   title: string;
   subtitle: string;
+  content: SiteContent["hero"];
+  highlights: Service[];
 }
 
-export function Hero({ siteName, title, subtitle }: Props) {
+const price = new Intl.NumberFormat("ru-RU");
+
+export function Hero({ siteName, title, subtitle, content, highlights }: Props) {
   return (
-    <header className="relative overflow-hidden bg-white">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_80%_0%,theme(colors.wa-light),transparent)]"
-      />
-      <div className="relative mx-auto max-w-5xl px-4">
+    <header className="relative isolate overflow-hidden">
+      {/* фон: анимированные пятна + сетка */}
+      <div aria-hidden className="absolute inset-0 -z-10">
+        <div className="absolute -left-24 -top-24 size-[22rem] rounded-full bg-wa/35 blur-[90px] animate-blob sm:size-[30rem]" />
+        <div className="absolute -right-28 top-1/4 size-[20rem] rounded-full bg-aqua/25 blur-[90px] animate-blob [animation-delay:-6s] sm:size-[28rem]" />
+        <div className="absolute -bottom-32 left-1/3 size-[22rem] rounded-full bg-lime/20 blur-[100px] animate-blob [animation-delay:-12s]" />
+        <div className="grid-bg absolute inset-0" />
+      </div>
+
+      <div className="mx-auto max-w-5xl px-4">
         <nav className="flex h-16 items-center justify-between" aria-label="Основная навигация">
-          <a href="#top" className="flex items-center gap-2 text-lg font-bold tracking-tight">
-            <span className="grid size-9 place-items-center rounded-xl bg-wa text-white">
-              <MessageCircle className="size-5" aria-hidden />
+          <a href="#top" className="font-display flex items-center gap-2 text-base font-bold sm:text-lg">
+            <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-wa to-lime text-ink shadow-lg shadow-wa/30">
+              <Zap className="size-5" aria-hidden />
             </span>
             {siteName}
           </a>
-          <a href="#order" className="btn-ghost btn-sm hidden sm:inline-flex">
-            Оставить заявку
+          <a href="#order" className="btn-outline min-h-10 rounded-xl px-4 text-sm">
+            Заявка
           </a>
         </nav>
 
-        <div className="py-12 text-center sm:py-20">
-          <h1 className="mx-auto max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+        <div className="relative pb-16 pt-10 text-center sm:pb-24 sm:pt-16">
+          {content.badge && (
+            <p className="reveal in mx-auto inline-flex items-center gap-2 rounded-full border border-wa/30 bg-wa/10 px-4 py-1.5 text-xs font-semibold text-wa sm:text-sm">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full rounded-full bg-wa animate-ping-slow" />
+                <span className="relative inline-flex size-2 rounded-full bg-wa" />
+              </span>
+              {content.badge}
+            </p>
+          )}
+
+          <h1 className="font-display mx-auto mt-5 max-w-3xl bg-gradient-to-br from-white via-white to-lime bg-clip-text text-[2rem] font-black leading-[1.08] text-transparent sm:text-5xl md:text-6xl">
             {title}
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600 sm:text-xl">{subtitle}</p>
+          <p className="mx-auto mt-5 max-w-xl text-base text-white/70 sm:text-xl">{subtitle}</p>
 
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <a href="#order" className="btn-wa w-full text-lg sm:w-auto">
+          <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+            <a href="#order" className="btn-glow text-lg">
               <MessageCircle className="size-5" aria-hidden />
-              Написать в WhatsApp
+              {content.cta_primary}
             </a>
-            <a href="#services" className="btn-ghost w-full sm:w-auto">
-              Посмотреть цены
-              <ArrowDown className="size-4" aria-hidden />
-            </a>
+            {content.cta_secondary && (
+              <a href="#services" className="btn-outline">
+                {content.cta_secondary}
+                <ArrowDown className="size-4" aria-hidden />
+              </a>
+            )}
           </div>
 
-          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-500">
-            <li>Без регистрации</li>
-            <li>Оценка за 15 минут</li>
-            <li>Бесплатные правки</li>
-          </ul>
+          {content.pills.length > 0 && (
+            <ul className="mt-8 flex flex-wrap items-center justify-center gap-2">
+              {content.pills.map((p) => (
+                <li key={p} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 sm:text-sm">
+                  {p}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* плавающие чипы с ценами */}
+          {highlights.length > 0 && (
+            <ul aria-hidden className="pointer-events-none mt-10 flex flex-wrap justify-center gap-3 sm:mt-14">
+              {highlights.slice(0, 3).map((s, i) => {
+                const Icon = getServiceIcon(s.icon);
+                return (
+                  <li
+                    key={s.id}
+                    className={`glass flex items-center gap-2 px-4 py-2.5 text-sm shadow-xl ${i % 2 ? "animate-float-slow" : "animate-float"}`}
+                    style={{ animationDelay: `${i * -2.3}s` }}
+                  >
+                    <Icon className="size-4 text-lime" />
+                    <span className="font-medium">{s.title}</span>
+                    <span className="text-white/60">от {price.format(s.price_from)} ₸</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          <Sparkles aria-hidden className="absolute right-2 top-6 size-6 text-lime/70 animate-wiggle sm:right-10" />
         </div>
       </div>
     </header>

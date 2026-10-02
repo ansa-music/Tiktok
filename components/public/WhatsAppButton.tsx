@@ -2,20 +2,21 @@
 
 import { MessageCircle } from "lucide-react";
 import type { NumberMode, WhatsAppNumber } from "@/lib/types";
-import { buildWaLink, pickNumber, openLink, QUICK_MESSAGE } from "@/lib/whatsapp";
+import { buildWaLink, pickNumber, openLink } from "@/lib/whatsapp";
 import { reachGoal } from "@/lib/analytics";
 
 interface Props {
   numbers: WhatsAppNumber[];
   mode: NumberMode;
-  text?: string;
+  text: string;
   className?: string;
   children?: React.ReactNode;
   ariaLabel?: string;
+  pausedText?: string;
 }
 
 /** Кнопка, которая открывает чат WhatsApp с выбранным менеджером. */
-export function WhatsAppButton({ numbers, mode, text = QUICK_MESSAGE, className, children, ariaLabel }: Props) {
+export function WhatsAppButton({ numbers, mode, text, className, children, ariaLabel, pausedText }: Props) {
   const hasNumbers = numbers.some((n) => n.is_active);
 
   function handleClick() {
@@ -30,9 +31,9 @@ export function WhatsAppButton({ numbers, mode, text = QUICK_MESSAGE, className,
       type="button"
       onClick={handleClick}
       disabled={!hasNumbers}
-      className={className ?? "btn-wa"}
+      className={className ?? "btn-glow"}
       aria-label={ariaLabel}
-      title={hasNumbers ? undefined : "Приём заявок временно приостановлен"}
+      title={hasNumbers ? undefined : pausedText}
     >
       {children ?? (
         <>

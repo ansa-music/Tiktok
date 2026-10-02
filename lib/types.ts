@@ -1,3 +1,5 @@
+import type { SiteContent } from "./content";
+
 export type NumberMode = "random" | "first";
 
 export interface Settings {
@@ -8,6 +10,7 @@ export interface Settings {
   message_template: string;
   number_mode: NumberMode;
   yandex_metrika_id: string | null;
+  content: SiteContent;
   updated_at?: string | null;
 }
 

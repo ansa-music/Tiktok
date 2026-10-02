@@ -2,6 +2,7 @@ import "server-only";
 import { getSupabase, isSupabaseConfigured } from "./supabase";
 import { mockId, mockStore } from "./mock";
 import type { Faq, Service, Settings, WhatsAppNumber } from "./types";
+import { mergeContent } from "./content";
 
 /**
  * Единый слой доступа к данным. Если Supabase настроен — ходим в него через service role,
@@ -31,10 +32,11 @@ function fail(error: { message: string } | null): never {
 // ---------- settings ----------
 
 export async function dbGetSettings(): Promise<Settings> {
-  if (!isSupabaseConfigured()) return { ...mockStore.settings };
+  if (!isSupabaseConfigured()) return { ...mockStore.settings, content: mergeContent(mockStore.settings.content) };
   const { data, error } = await getSupabase().from("settings").select("*").eq("id", 1).single();
   if (error) fail(error);
-  return data as Settings;
+  const row = data as Settings & { content?: unknown };
+  return { ...row, content: mergeContent(row.content) };
 }
 
 export async function dbUpdateSettings(patch: Partial<Omit<Settings, "id">>): Promise<void> {
@@ -46,7 +48,12 @@ export async function dbUpdateSettings(patch: Partial<Omit<Settings, "id">>): Pr
     .from("settings")
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq("id", 1);
-  if (error) fail(error);
+  if (error) {
+    if (/content/.test(error.message) && /column/i.test(error.message)) {
+      throw new Error("В базе нет колонки settings.content. Выполните supabase/migrations/2026-10-02_content.sql в SQL Editor.");
+    }
+    fail(error);
+  }
 }
 
 // ---------- generic rows ----------

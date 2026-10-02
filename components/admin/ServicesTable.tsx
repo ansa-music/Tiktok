@@ -99,7 +99,7 @@ export function ServicesTable({ services }: { services: Service[] }) {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">Цены и услуги</h1>
-          <p className="text-sm text-slate-500">Меняйте цену прямо в строке и нажимайте «Сохранить».</p>
+          <p className="text-sm text-slate-500">Меняйте цену прямо в строке и нажимайте «Сохранить». Переключатель «Активна» убирает услугу с сайта (например, если не делаете конспекты).</p>
         </div>
         {!adding && (
           <button type="button" onClick={() => setAdding(true)} className="btn-wa btn-sm"><Plus className="size-4" aria-hidden />Добавить</button>

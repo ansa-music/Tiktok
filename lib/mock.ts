@@ -1,5 +1,6 @@
 import "server-only";
 import type { Faq, Service, Settings, WhatsAppNumber } from "./types";
+import { DEFAULT_CONTENT } from "./content";
 
 /**
  * Моковые данные — копия стартовых значений из supabase/schema.sql.
@@ -27,6 +28,7 @@ function seed(): MockStore {
       message_template: DEFAULT_TEMPLATE,
       number_mode: "random",
       yandex_metrika_id: null,
+      content: structuredClone(DEFAULT_CONTENT),
       updated_at: new Date().toISOString(),
     },
     numbers: [{ id: "n-1", label: "Основной", phone: "77000000000", is_active: true, sort_order: 0 }],

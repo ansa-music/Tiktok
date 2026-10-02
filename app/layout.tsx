@@ -1,15 +1,19 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Manrope, Unbounded } from "next/font/google";
 import "./globals.css";
 import { getSettings } from "@/lib/data";
 import { getSiteUrl } from "@/lib/site";
 import { Metrika } from "@/components/public/Metrika";
 
-const inter = Inter({
-  subsets: ["latin", "cyrillic"],
-  variable: "--font-inter",
-  display: "swap",
-});
+const manrope = Manrope({ subsets: ["latin", "cyrillic"], variable: "--font-manrope", display: "swap" });
+const unbounded = Unbounded({ subsets: ["latin", "cyrillic"], weight: ["500", "700", "900"], variable: "--font-unbounded", display: "swap" });
+
+export const viewport: Viewport = {
+  themeColor: "#070b09",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings().catch(() => null);
@@ -23,14 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     applicationName: siteName,
-    openGraph: {
-      title,
-      description,
-      siteName,
-      locale: "ru_RU",
-      type: "website",
-      url: "/",
-    },
+    openGraph: { title, description, siteName, locale: "ru_RU", type: "website", url: "/" },
     twitter: { card: "summary", title, description },
     robots: { index: true, follow: true },
   };
@@ -41,7 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const metrikaId = settings?.yandex_metrika_id?.trim() || null;
 
   return (
-    <html lang="ru" className={inter.variable}>
+    <html lang="ru" className={`${manrope.variable} ${unbounded.variable}`}>
       <body className="min-h-dvh font-sans">
         {children}
         {metrikaId && <Metrika id={metrikaId} />}

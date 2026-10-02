@@ -1,49 +1,59 @@
 "use client";
 
-import { Clock } from "lucide-react";
+import { ArrowUpRight, Clock } from "lucide-react";
 import type { Service } from "@/lib/types";
+import type { SiteContent } from "@/lib/content";
 import { getServiceIcon } from "@/lib/icons";
 import { selectService } from "@/lib/events";
+import { Reveal } from "./Reveal";
 
 const price = new Intl.NumberFormat("ru-RU");
 
-export function Services({ services }: { services: Service[] }) {
+export function Services({ services, content }: { services: Service[]; content: SiteContent["services"] }) {
   if (services.length === 0) return null;
 
   return (
-    <section id="services" className="mx-auto max-w-5xl scroll-mt-4 px-4 py-14">
-      <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Услуги и цены</h2>
-      <p className="mt-2 text-slate-600">Нажмите на карточку — тип работы подставится в форму заявки.</p>
+    <section id="services" className="mx-auto max-w-5xl scroll-mt-4 px-4 py-14 sm:py-20">
+      <Reveal>
+        <h2 className="font-display text-2xl font-bold sm:text-4xl">{content.title}</h2>
+        {content.subtitle && <p className="mt-2 text-white/60">{content.subtitle}</p>}
+      </Reveal>
 
-      <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {services.map((s) => {
+      <ul className="mt-8 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+        {services.map((s, i) => {
           const Icon = getServiceIcon(s.icon);
           return (
-            <li key={s.id}>
+            <Reveal as="li" key={s.id} delay={Math.min(i, 5) * 70}>
               <button
                 type="button"
                 onClick={() => selectService(s.id)}
-                className="card group flex h-full w-full flex-col p-5 text-left transition hover:-translate-y-0.5 hover:border-wa hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-wa/30"
+                className="group relative flex w-full items-center gap-4 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-4 text-left transition duration-300 hover:-translate-y-1 hover:border-wa/60 hover:bg-white/[0.07] hover:shadow-[0_20px_60px_-20px_rgb(37_211_102_/_0.5)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-wa/40 active:scale-[0.98] sm:flex-col sm:items-start sm:p-5"
               >
-                <span className="grid size-12 place-items-center rounded-xl bg-wa-light text-wa-dark transition group-hover:bg-wa group-hover:text-white">
+                <span aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-wa/20 blur-2xl opacity-0 transition duration-500 group-hover:opacity-100" />
+                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-wa/25 to-lime/15 text-lime transition duration-300 group-hover:scale-110 group-hover:from-wa group-hover:to-lime group-hover:text-ink">
                   <Icon className="size-6" aria-hidden />
                 </span>
-                <span className="mt-4 text-lg font-semibold">{s.title}</span>
-                {s.description && <span className="mt-1 text-sm text-slate-600">{s.description}</span>}
-                <span className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-1 pt-4">
-                  <span className="text-xl font-bold">
-                    от {price.format(s.price_from)} ₸
-                    {s.price_unit && <span className="ml-1 text-sm font-medium text-slate-500">{s.price_unit}</span>}
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1 text-base font-bold sm:text-lg">
+                    {s.title}
+                    <ArrowUpRight className="size-4 text-white/30 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-lime" aria-hidden />
                   </span>
-                  {s.deadline_text && (
-                    <span className="inline-flex items-center gap-1 whitespace-nowrap text-sm text-slate-500">
-                      <Clock className="size-4" aria-hidden />
-                      {s.deadline_text}
+                  {s.description && <span className="mt-0.5 line-clamp-2 block text-sm text-white/55">{s.description}</span>}
+                  <span className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 sm:mt-4">
+                    <span className="font-display text-base font-bold text-gradient sm:text-xl">
+                      от {price.format(s.price_from)} ₸
+                      {s.price_unit && <span className="ml-1 font-sans text-xs font-medium text-white/50 sm:text-sm">{s.price_unit}</span>}
                     </span>
-                  )}
+                    {s.deadline_text && (
+                      <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-white/50 sm:text-sm">
+                        <Clock className="size-3.5" aria-hidden />
+                        {s.deadline_text}
+                      </span>
+                    )}
+                  </span>
                 </span>
               </button>
-            </li>
+            </Reveal>
           );
         })}
       </ul>

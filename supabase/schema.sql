@@ -10,8 +10,11 @@ create table if not exists settings (
     E'Здравствуйте! Хочу заказать работу.\nТип: {type}\nПредмет: {subject}\nТема: {topic}\nСрок сдачи: {deadline}\nОбъём: {volume}\nКомментарий: {comment}\nИмя: {name}',
   number_mode text not null default 'random' check (number_mode in ('random','first')),
   yandex_metrika_id text,
+  content jsonb not null default '{}'::jsonb,  -- тексты секций (см. lib/content.ts)
   updated_at timestamptz default now()
 );
+-- Для баз, созданных до появления колонки content:
+alter table settings add column if not exists content jsonb not null default '{}'::jsonb;
 insert into settings (id) values (1) on conflict do nothing;
 
 -- Номера WhatsApp

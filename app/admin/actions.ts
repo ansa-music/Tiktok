@@ -107,12 +107,40 @@ const required = (max: number, name: string) =>
 
 // ---------------- Настройки / тексты ----------------
 
+const pair = (name: string) =>
+  z.object({ title: required(80, `${name}: заголовок`), text: text(300, `${name}: описание`) });
+const lines = (max: number, name: string) =>
+  z.array(text(60, name)).max(max, `${name}: не больше ${max} элементов`).transform((a) => a.filter(Boolean));
+
+const contentSchema = z.object({
+  hero: z.object({
+    badge: text(60, "Бейдж"),
+    cta_primary: required(40, "Главная кнопка"),
+    cta_secondary: text(40, "Вторая кнопка"),
+    pills: lines(6, "Преимущества под кнопкой"),
+  }),
+  marquee: z.object({ enabled: z.boolean(), items: lines(20, "Бегущая строка") }),
+  services: z.object({ enabled: z.boolean(), title: required(80, "Услуги: заголовок"), subtitle: text(200, "Услуги: подзаголовок") }),
+  order: z.object({
+    title: required(80, "Форма: заголовок"),
+    subtitle: text(200, "Форма: подзаголовок"),
+    button: required(50, "Форма: кнопка"),
+    paused_text: required(100, "Форма: текст паузы"),
+  }),
+  how: z.object({ enabled: z.boolean(), title: required(80, "Шаги: заголовок"), steps: z.array(pair("Шаг")).max(6, "Шагов не больше 6") }),
+  guarantees: z.object({ enabled: z.boolean(), title: required(80, "Гарантии: заголовок"), items: z.array(pair("Гарантия")).max(8, "Гарантий не больше 8") }),
+  faq: z.object({ enabled: z.boolean(), title: required(80, "FAQ: заголовок") }),
+  footer: z.object({ tagline: text(100, "Подвал: подпись"), disclaimer: text(300, "Подвал: дисклеймер") }),
+  whatsapp: z.object({ quick_message: required(300, "Быстрое сообщение"), floating_label: required(30, "Плавающая кнопка") }),
+});
+
 const settingsSchema = z.object({
   site_name: required(80, "Название сайта"),
   hero_title: required(300, "Заголовок"),
   hero_subtitle: text(300, "Подзаголовок"),
   message_template: required(2000, "Шаблон сообщения"),
   yandex_metrika_id: text(20, "ID Метрики").refine((v) => v === "" || /^\d+$/.test(v), "ID Метрики: только цифры"),
+  content: contentSchema,
 });
 
 export async function saveSettings(input: unknown): Promise<ActionResult> {

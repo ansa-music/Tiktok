@@ -15,7 +15,7 @@ export type TabKey = "services" | "numbers" | "texts" | "faq";
 const TABS: { key: TabKey; label: string }[] = [
   { key: "services", label: "Цены и услуги" },
   { key: "numbers", label: "WhatsApp номера" },
-  { key: "texts", label: "Тексты" },
+  { key: "texts", label: "Тексты и секции" },
   { key: "faq", label: "FAQ" },
 ];
 

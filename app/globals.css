@@ -4,7 +4,54 @@
   --color-wa: #25d366;
   --color-wa-dark: #1da851;
   --color-wa-light: #e9fbf0;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-lime: #c8ff4d;
+  --color-aqua: #3df2ff;
+  --color-ink: #070b09;
+  --color-surface: #0e1512;
+  --color-surface-2: #16211b;
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-unbounded), var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-slow: float 11s ease-in-out infinite;
+  --animate-blob: blob 18s ease-in-out infinite;
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-gradient: gradient 7s ease infinite;
+  --animate-ping-slow: ping-slow 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-shine: shine 2.8s ease-in-out infinite;
+  --animate-wiggle: wiggle 3.5s ease-in-out infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50% { transform: translateY(-14px) rotate(1.5deg); }
+  }
+  @keyframes blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(8%, -10%) scale(1.15); }
+    66% { transform: translate(-10%, 8%) scale(0.9); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes gradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  @keyframes ping-slow {
+    0% { transform: scale(1); opacity: 0.7; }
+    80%, 100% { transform: scale(1.9); opacity: 0; }
+  }
+  @keyframes shine {
+    0% { transform: translateX(-150%) skewX(-20deg); }
+    60%, 100% { transform: translateX(250%) skewX(-20deg); }
+  }
+  @keyframes wiggle {
+    0%, 90%, 100% { transform: rotate(0); }
+    93% { transform: rotate(-8deg); }
+    96% { transform: rotate(8deg); }
+  }
 }
 
 html {
@@ -13,10 +60,89 @@ html {
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-ink text-white antialiased;
 }
 
-/* Кнопки и поля — минимум 48px по высоте, удобно тапать с телефона */
+/* ---------- Публичная часть ---------- */
+
+@utility font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+@utility text-gradient {
+  @apply bg-gradient-to-r from-wa via-lime to-aqua bg-clip-text text-transparent;
+  background-size: 200% 200%;
+  animation: gradient 7s ease infinite;
+}
+
+@utility glass {
+  @apply rounded-3xl border border-white/10 bg-white/[0.045] backdrop-blur-md;
+}
+
+@utility btn-glow {
+  @apply relative inline-flex min-h-14 items-center justify-center gap-2 overflow-hidden rounded-2xl
+    bg-gradient-to-r from-wa via-[#5be38a] to-lime px-6 font-bold text-ink transition
+    focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-wa/40
+    active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50;
+  background-size: 200% 200%;
+  animation: gradient 6s ease infinite;
+  box-shadow: 0 10px 40px -10px rgb(37 211 102 / 0.65);
+}
+.btn-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  animation: shine 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@utility btn-outline {
+  @apply inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6
+    font-semibold text-white backdrop-blur transition hover:border-wa/60 hover:bg-white/10
+    focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20 active:scale-[0.97];
+}
+
+@utility input-dark {
+  @apply block w-full min-h-13 rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-base text-white
+    placeholder:text-white/35 transition focus:border-wa focus:bg-white/[0.09] focus:outline-none focus:ring-4 focus:ring-wa/25;
+}
+textarea.input-dark {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+select.input-dark option {
+  color: #0e1512;
+  background: #fff;
+}
+input[type="date"].input-dark::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(26px) scale(0.985);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 100%);
+}
+
+/* ---------- Админка (светлая) ---------- */
+
 @utility btn {
   @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-6 font-semibold transition
     focus-visible:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-50;
@@ -33,7 +159,6 @@ body {
 @utility btn-sm {
   @apply min-h-10 rounded-xl px-4 text-sm;
 }
-
 @utility field {
   @apply block w-full min-h-12 rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900
     placeholder:text-slate-400 focus:border-wa focus:outline-none focus:ring-4 focus:ring-wa/20;
@@ -45,7 +170,6 @@ textarea.field {
 @utility label {
   @apply mb-1.5 block text-sm font-medium text-slate-700;
 }
-
 @utility card {
   @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
 }
@@ -55,4 +179,19 @@ details > summary {
 }
 details > summary::-webkit-details-marker {
   display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }

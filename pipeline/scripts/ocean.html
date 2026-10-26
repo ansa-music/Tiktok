@@ -1,0 +1,140 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="lib.js"></script>
+<script>
+// Scale series: how deep does the ocean go? A continuous dive with a depth gauge.
+const LIME = '#C8FF2E', INK = '#F4F4F0', MUTED = '#9fb6c4';
+const MAXD = 10935;
+// [depth m, headline, sub, icon kind]
+const MARKS = [
+  [40, '40 m', 'Recreational scuba limit', 'diver'],
+  [200, '200 m', 'Sunlight is gone', 'sun'],
+  [214, '214 m', 'Deepest dive on one breath', 'diver'],
+  [332, '332 m', 'Deepest scuba dive ever', 'diver'],
+  [1000, '1,000 m', 'The midnight zone. Total darkness.', 'angler'],
+  [2000, '2,000 m', 'Sperm whales hunt down here', 'whale'],
+  [3800, '3,800 m', 'The Titanic', 'ship'],
+  [8849, '8,849 m', 'Mount Everest would fit here…', 'mountain'],
+  [10935, '10,935 m', 'Challenger Deep. The bottom.', 'flag'],
+];
+// time -> depth: slow at the top, accelerating, with holds at each mark
+const KEYS = [[0, 0], [2.2, 0], [4.0, 40], [6.2, 200], [7.6, 214], [9.6, 332], [12.4, 1000], [15.2, 2000], [18.2, 3800], [21.6, 8849], [24.8, 10935], [30, 10935]];
+function depthAt(t) {
+  for (let i = 1; i < KEYS.length; i++) {
+    const [t0, d0] = KEYS[i - 1], [t1, d1] = KEYS[i];
+    if (t <= t1) { const k = (t - t0) / (t1 - t0); const hold = .35; const kk = k < hold ? 0 : ease((k - hold) / (1 - hold)); return lerp(d0, d1, kk); }
+  }
+  return MAXD;
+}
+function waterColor(d) {
+  const stops = [[0, [43, 180, 232]], [60, [16, 120, 190]], [200, [8, 60, 120]], [1000, [3, 12, 40]], [4000, [1, 3, 12]], [11000, [0, 0, 4]]];
+  for (let i = 1; i < stops.length; i++) if (d <= stops[i][0]) {
+    const k = (d - stops[i - 1][0]) / (stops[i][0] - stops[i - 1][0]); const a = stops[i - 1][1], b = stops[i][1];
+    return a.map((v, j) => Math.round(lerp(v, b[j], k)));
+  }
+  return [0, 0, 4];
+}
+const BUBBLES = (() => { const r = rng(8); return Array.from({ length: 70 }, () => ({ x: r() * W, y: r() * H, s: 3 + r() * 9, v: 60 + r() * 140 })); })();
+const SNOW = (() => { const r = rng(9); return Array.from({ length: 160 }, () => ({ x: r() * W, y: r() * H, s: 1 + r() * 3, v: 10 + r() * 30 })); })();
+
+function icon(kind, x, y, s, t, a) {
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(s, s);
+  ctx.fillStyle = '#05070c'; ctx.strokeStyle = 'rgba(200,240,255,.7)'; ctx.lineWidth = 3;
+  if (kind === 'diver') {
+    ctx.rotate(.15 * Math.sin(t * 2));
+    ctx.beginPath(); ctx.ellipse(0, 0, 110, 26, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(-120, -6, 24, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillRect(-40, -40, 70, 20);                                         // tank
+    ctx.beginPath(); ctx.moveTo(100, 0); ctx.lineTo(170, -20 + Math.sin(t * 8) * 14); ctx.lineTo(170, 20 + Math.sin(t * 8) * 14); ctx.closePath(); ctx.fill();
+  } else if (kind === 'sun') {
+    ctx.strokeStyle = 'rgba(255,230,140,.6)';
+    for (let i = 0; i < 9; i++) { const a2 = -1.2 + i * .3; ctx.beginPath(); ctx.moveTo(0, -500); ctx.lineTo(Math.sin(a2) * 400, 300); ctx.stroke(); }
+  } else if (kind === 'angler') {
+    ctx.beginPath(); ctx.ellipse(0, 0, 90, 70, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(80, 0); ctx.lineTo(140, -40); ctx.lineTo(140, 40); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(200,240,255,.7)'; ctx.beginPath(); ctx.moveTo(-40, -60); ctx.quadraticCurveTo(-60, -150, -140, -110); ctx.stroke();
+    const g = ctx.createRadialGradient(-140, -110, 2, -140, -110, 70); g.addColorStop(0, 'rgba(200,255,120,1)'); g.addColorStop(1, 'rgba(200,255,120,0)');
+    ctx.fillStyle = g; ctx.fillRect(-210, -180, 140, 140);
+    ctx.fillStyle = '#e6f6ff'; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(-80 + i * 14, 10); ctx.lineTo(-74 + i * 14, 30); ctx.lineTo(-68 + i * 14, 10); ctx.fill(); }
+  } else if (kind === 'whale') {
+    ctx.beginPath(); ctx.moveTo(-260, -60); ctx.quadraticCurveTo(-280, 60, -150, 80); ctx.lineTo(160, 60); ctx.quadraticCurveTo(230, 40, 260, 0 + Math.sin(t * 3) * 10);
+    ctx.lineTo(320, -50 + Math.sin(t * 3) * 20); ctx.lineTo(300, 30); ctx.lineTo(330, 70 + Math.sin(t * 3) * 20); ctx.lineTo(240, 40); ctx.quadraticCurveTo(0, -70, -260, -60); ctx.fill(); ctx.stroke();
+  } else if (kind === 'ship') {
+    ctx.rotate(-.12);
+    ctx.beginPath(); ctx.moveTo(-320, -40); ctx.lineTo(320, -40); ctx.lineTo(270, 60); ctx.lineTo(-290, 60); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillRect(-200, -90, 380, 50);
+    [-120, -20, 80, 180].forEach(x2 => { ctx.beginPath(); ctx.moveTo(x2 - 20, -90); ctx.lineTo(x2 - 14, -180); ctx.lineTo(x2 + 18, -180); ctx.lineTo(x2 + 24, -90); ctx.fill(); ctx.stroke(); });
+  } else if (kind === 'mountain') {
+    // Everest silhouette rising from the trench floor; its peak still sits ~2 km below the surface
+    ctx.fillStyle = '#d9e6f0'; ctx.globalAlpha = a * .9;
+    ctx.beginPath(); ctx.moveTo(-500, 700); ctx.lineTo(-120, -40); ctx.lineTo(-60, 10); ctx.lineTo(0, -120); ctx.lineTo(80, -20); ctx.lineTo(150, -60); ctx.lineTo(520, 700); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#7d93a5'; ctx.beginPath(); ctx.moveTo(0, -120); ctx.lineTo(80, -20); ctx.lineTo(30, 80); ctx.lineTo(-40, 30); ctx.closePath(); ctx.fill();
+  } else if (kind === 'flag') {
+    ctx.fillStyle = '#1b1f26'; ctx.fillRect(-W, 60, W * 2, 400);
+    ctx.fillStyle = INK; ctx.fillRect(-4, -160, 8, 220); ctx.fillStyle = LIME; ctx.fillRect(4, -160, 120, 70);
+  }
+  ctx.restore();
+}
+
+window.DURATION = 29.5;
+window.draw = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.textAlign = 'center';
+  const d = depthAt(t), [r, g, b] = waterColor(d);
+  // background water
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, `rgb(${Math.min(255, r + 18)},${Math.min(255, g + 18)},${Math.min(255, b + 18)})`); bg.addColorStop(1, `rgb(${r},${g},${b})`);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  // surface + hook (first seconds)
+  if (d < 30) {
+    const sy = 520 - d * 40;
+    ctx.fillStyle = '#9fe3ff'; ctx.fillRect(0, 0, W, sy);
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.moveTo(0, sy);
+    for (let x = 0; x <= W; x += 20) ctx.lineTo(x, sy + Math.sin(x * .02 + t * 4) * 12); ctx.lineTo(W, sy + 40); ctx.lineTo(0, sy + 40); ctx.fill();
+  }
+  // light rays fade with depth
+  const ray = clamp(1 - d / 220);
+  if (ray > 0) { ctx.fillStyle = `rgba(255,255,255,${.08 * ray})`; for (let i = 0; i < 6; i++) { const x = 100 + i * 180 + Math.sin(t + i) * 40; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 60, 0); ctx.lineTo(x + 260, H); ctx.lineTo(x + 140, H); ctx.fill(); } }
+  // particles: bubbles near the top, marine snow in the deep
+  const deep = clamp(d / 800);
+  BUBBLES.forEach(p => { ctx.globalAlpha = .5 * (1 - deep); ctx.strokeStyle = '#e8f8ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, (p.y - t * p.v) % H + (p.y - t * p.v < 0 ? H : 0), p.s, 0, Math.PI * 2); ctx.stroke(); });
+  SNOW.forEach(p => { ctx.globalAlpha = .6 * deep; ctx.fillStyle = '#cfd8dc'; ctx.fillRect(p.x, (p.y - d * .9 * p.s) % H + H * (((p.y - d * .9 * p.s) % H) < 0), p.s, p.s); });
+  ctx.globalAlpha = 1;
+  // active marker: the last one reached
+  let cur = -1; MARKS.forEach((m, i) => { if (t >= KEYS.find(k => k[1] === m[0])[0]) cur = i; });
+  if (cur >= 0) {
+    const m = MARKS[cur], ti = KEYS.findIndex(k => k[1] === m[0]), since = t - KEYS[ti][0], k = easeOut(clamp(since / .45));
+    const s = .9 + .1 * k;
+    icon(m[3], W / 2, m[3] === 'mountain' ? 1450 : m[3] === 'flag' ? 1450 : 1200, m[3] === 'whale' || m[3] === 'ship' ? 1.2 : 1, t, k);
+    ctx.save(); ctx.translate(W / 2, 560); ctx.scale(s, s);
+    ctx.globalAlpha = k; ctx.fillStyle = LIME; ctx.font = '900 140px "Inter Display", Inter, sans-serif'; ctx.fillText(m[1], 0, 0);
+    ctx.fillStyle = INK; ctx.font = '800 58px "Inter Display", Inter, sans-serif'; ctx.fillText(m[2], 0, 90);
+    ctx.restore(); ctx.globalAlpha = 1;
+    if (m[3] === 'mountain') { ctx.globalAlpha = k; ctx.fillStyle = MUTED; ctx.font = '600 40px "JetBrains Mono", monospace'; ctx.fillText('…with its peak still 2 km underwater', W / 2, 760); ctx.globalAlpha = 1; }
+  } else {
+    const k = easeOut(seg(t, .1, .6));
+    ctx.globalAlpha = k; ctx.fillStyle = '#05303f'; ctx.font = '900 110px "Inter Display", Inter, sans-serif'; ctx.fillText('HOW DEEP', W / 2, 260); ctx.fillText('CAN WE GO?', W / 2, 380);
+    ctx.globalAlpha = 1; icon('diver', W / 2, 900 + Math.sin(t * 2) * 10, 1, t, 1);
+  }
+  // depth gauge (right edge)
+  const gx = W - 70, gy0 = 200, gy1 = H - 200, p = Math.log10(1 + d) / Math.log10(1 + MAXD);
+  ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(gx, gy0, 10, gy1 - gy0);
+  ctx.fillStyle = LIME; ctx.fillRect(gx, gy0, 10, (gy1 - gy0) * p);
+  ctx.beginPath(); ctx.arc(gx + 5, gy0 + (gy1 - gy0) * p, 16, 0, Math.PI * 2); ctx.fill();
+  ctx.textAlign = 'right'; ctx.fillStyle = INK; ctx.font = '800 54px "JetBrains Mono", monospace';
+  ctx.fillText(`${Math.round(d).toLocaleString('en-US')} m`, gx - 30, gy0 + (gy1 - gy0) * p + 18);
+  ctx.textAlign = 'center';
+  // end card
+  if (t > 26.2) { const k = easeOut(seg(t, 26.2, 26.8)); ctx.globalAlpha = k; ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = INK; ctx.font = '800 56px "Inter Display", Inter, sans-serif'; ctx.fillText('We have better maps of Mars', W / 2, 820); ctx.fillText('than of our own ocean floor.', W / 2, 900);
+    ctx.fillStyle = LIME; ctx.font = '900 96px "Inter Display", Inter, sans-serif'; ctx.fillText('AJENT21', W / 2, 1300);
+    ctx.fillStyle = MUTED; ctx.font = '600 38px "JetBrains Mono", monospace'; ctx.fillText('FOLLOW FOR MORE SCALE', W / 2, 1370); ctx.globalAlpha = 1; }
+  // progress bar
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(0, 0, W, 10); ctx.fillStyle = LIME; ctx.fillRect(0, 0, W * t / window.DURATION, 10);
+  vignette(.5); grain(t);
+  ctaPill(t, 12.6, 2.6, 'FOLLOW · NEW SCALE DAILY');
+  ctx.textAlign = 'left'; ctx.font = '700 30px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(244,244,240,.7)'; ctx.fillText('SCALE #2', 40, 70); ctx.textAlign = 'center';
+};
+</script></body></html>

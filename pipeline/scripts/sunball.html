@@ -1,0 +1,242 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800;900&family=JetBrains+Mono:wght@600;700;800&display=block">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="lib.js"></script>
+<script>
+// Scale series: if the Sun were a 24 cm basketball. Scale 1 : 5.8 billion.
+// Earth 12,742 km -> 2.2 mm, 149.6 M km -> 26 m; Moon 384,400 km -> 6.6 cm (3,474 km -> 0.6 mm);
+// Jupiter 139,820 km -> 2.4 cm, 778.5 M km -> 134 m; Neptune 4.5 B km -> 772 m;
+// Proxima Centauri 4.25 ly -> 6,900 km (~New York to Rome), radius 0.154 Sun -> 3.7 cm (ping-pong ball).
+const LIME = '#C8FF2E', INK = '#F4F4F0', MUTED = '#9A9A92';
+const F = '"Inter Display", Inter, "Segoe UI", sans-serif', M = '"JetBrains Mono", Consolas, monospace';
+const STARS = (() => { const r = rng(21); return Array.from({ length: 420 }, () => ({ x: r() * W, y: r() * H, z: .2 + r() * .8, tw: r() * 6 })); })();
+
+function space(t, a = 1) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#04030a'); g.addColorStop(1, '#0b0814');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  STARS.forEach(s => { ctx.globalAlpha = a * s.z * (.55 + .45 * Math.sin(t * 2 + s.tw)); ctx.fillStyle = '#fff';
+    ctx.fillRect((s.x + t * 6 * s.z) % W, s.y, 2.4 * s.z, 2.4 * s.z); });
+  ctx.globalAlpha = 1;
+}
+function txt(s, x, y, size, col = INK, weight = 900, family = F, alpha = 1) {
+  if (alpha <= 0) return;
+  ctx.globalAlpha = alpha; ctx.fillStyle = col; ctx.font = `${weight} ${size}px ${family}`; ctx.fillText(s, x, y); ctx.globalAlpha = 1;
+}
+function glow(x, y, r, col, a = 1) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(${col},${.8 * a})`); g.addColorStop(1, `rgba(${col},0)`);
+  ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+function sunDisc(x, y, r, t, a = 1) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  glow(x, y, r * 2.4, '255,170,60', .9);
+  const g = ctx.createRadialGradient(x - r * .3, y - r * .3, r * .1, x, y, r);
+  g.addColorStop(0, '#fff6c8'); g.addColorStop(.55, '#ffc23d'); g.addColorStop(1, '#ff7a1a');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  // boiling surface
+  const rr = rng(Math.floor(t * 12) + 4); ctx.fillStyle = 'rgba(255,255,220,.18)';
+  for (let i = 0; i < 40; i++) { const an = rr() * 6.283, d = Math.sqrt(rr()) * r * .9; ctx.beginPath(); ctx.arc(x + Math.cos(an) * d, y + Math.sin(an) * d, 6 + rr() * 18, 0, 6.283); ctx.fill(); }
+  ctx.restore();
+}
+function ball(x, y, r, rot, a = 1) {
+  if (a <= 0 || r <= 0) return;
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y);
+  if (r > 20) { ctx.shadowColor = 'rgba(255,130,40,.55)'; ctx.shadowBlur = r * .5; }
+  const g = ctx.createRadialGradient(-r * .35, -r * .35, r * .1, 0, 0, r);
+  g.addColorStop(0, '#ffb067'); g.addColorStop(.6, '#e8661c'); g.addColorStop(1, '#8f3507');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+  ctx.save(); ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.clip(); ctx.rotate(rot);
+  ctx.strokeStyle = '#1a0d05'; ctx.lineWidth = Math.max(1, r * .045);
+  ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(0, r); ctx.stroke();
+  ctx.beginPath(); ctx.arc(-r * 1.25, 0, r * .95, -1.1, 1.1); ctx.stroke();
+  ctx.beginPath(); ctx.arc(r * 1.25, 0, r * .95, Math.PI - 1.1, Math.PI + 1.1); ctx.stroke();
+  ctx.restore(); ctx.restore();
+}
+function planet(x, y, r, cols, a = 1, bands = false) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  const g = ctx.createRadialGradient(x - r * .35, y - r * .35, r * .05, x, y, r);
+  g.addColorStop(0, cols[0]); g.addColorStop(1, cols[1]);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  if (bands) { ctx.save(); ctx.clip(); ctx.fillStyle = 'rgba(120,70,40,.45)';
+    [-.55, -.2, .15, .45].forEach((b, i) => ctx.fillRect(x - r, y + b * r, r * 2, r * (.12 + .05 * (i % 2)))); ctx.restore(); }
+  ctx.restore();
+}
+function label(s, x, y, col = INK, size = 40, a = 1) { txt(s, x, y, size, col, 700, M, a); }
+const fmt = n => Math.round(n).toLocaleString('en-US');
+function headline(a, b, k, y = 300, sub) {
+  const s = .85 + .15 * easeOut(k);
+  ctx.save(); ctx.translate(W / 2, y); ctx.scale(s, s);
+  txt(a, 0, 0, 104, LIME, 900, F, k); txt(b, 0, 96, 70, INK, 800, F, k);
+  ctx.restore();
+  if (sub) txt(sub, W / 2, y + 180, 42, MUTED, 600, M, k);
+}
+
+// ---------- shots ----------
+function s0(t, lt) {                         // hook: the Sun shrinks into a basketball
+  space(t);
+  const m = ease(seg(lt, .5, 1.5)), r = lerp(430, 300, m);
+  flash(.25 * clamp(1 - lt * 4), '255,220,150');
+  sunDisc(W / 2, 1200, r, t, 1 - m); ball(W / 2, 1200, r, lt * .8, m);
+  const k = 1;
+  txt('IF THE SUN', W / 2, 340, 116, INK, 900, F, k);
+  txt('WERE A', W / 2, 460, 116, INK, 900, F, k);
+  txt('BASKETBALL…', W / 2, 600, 110, LIME, 900, F, easeOut(seg(lt, 0, .35)));
+  txt('scale 1 : 5.8 billion', W / 2, 1660, 40, MUTED, 600, M, easeOut(seg(lt, 1.3, 1.8)));
+}
+function s1(t, lt) {                         // Earth size
+  space(t);
+  const k = easeOut(seg(lt, 0, .4));
+  ball(W / 2, 1400, 280, 1.9 + lt * .6, 1);
+  headline('EARTH = 2 mm', 'the size of a pinhead', k, 290);
+  // real-scale Earth (2.2 mm next to a 24 cm ball) + magnifier
+  const ex = W / 2, ey = 1000, zr = 150, my = 680, mk = easeOut(seg(lt, .4, .9));
+  glow(ex, ey, 26, '120,190,255', 1); planet(ex, ey, 3, ['#bfe6ff', '#2a7de1']);
+  ctx.globalAlpha = mk; ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(ex - zr * .55, my + zr * .85); ctx.lineTo(ex - 6, ey - 6); ctx.moveTo(ex + zr * .55, my + zr * .85); ctx.lineTo(ex + 6, ey - 6); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.save(); ctx.globalAlpha = mk; ctx.fillStyle = '#05060c'; ctx.beginPath(); ctx.arc(ex, my, zr, 0, 6.283); ctx.fill();
+  planet(ex, my, zr * .62 * mk, ['#bfe6ff', '#1d5fc0'], mk);
+  ctx.fillStyle = 'rgba(70,160,90,.8)'; ctx.globalAlpha = mk;
+  ctx.beginPath(); ctx.ellipse(ex - 25, my - 20, 38 * mk, 24 * mk, .6, 0, 6.283); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(ex + 30, my + 30, 24 * mk, 34 * mk, -.4, 0, 6.283); ctx.fill();
+  ctx.globalAlpha = mk; ctx.strokeStyle = LIME; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(ex, my, zr, 0, 6.283); ctx.stroke();
+  ctx.restore();
+  label('▲ real size', ex + 150, ey + 14, MUTED, 34, mk);
+}
+// court: 28 m long, mapped top->bottom
+const CT = 430, PXM = 45, CW = 15 * PXM;
+function court(a) {
+  const x0 = (W - CW) / 2, L = 28 * PXM;
+  ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = 'rgba(200,255,46,.45)'; ctx.lineWidth = 4;
+  ctx.fillStyle = 'rgba(200,255,46,.04)'; ctx.fillRect(x0, CT, CW, L); ctx.strokeRect(x0, CT, CW, L);
+  ctx.beginPath(); ctx.moveTo(x0, CT + L / 2); ctx.lineTo(x0 + CW, CT + L / 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W / 2, CT + L / 2, 1.8 * PXM, 0, 6.283); ctx.stroke();
+  [[CT, 1], [CT + L, -1]].forEach(([y, d]) => {
+    ctx.strokeRect(W / 2 - 2.45 * PXM, d > 0 ? y : y - 5.8 * PXM, 4.9 * PXM, 5.8 * PXM);
+    ctx.beginPath(); ctx.arc(W / 2, y + d * 1.575 * PXM, 6.75 * PXM, d > 0 ? .2 : Math.PI + .2, d > 0 ? Math.PI - .2 : 2 * Math.PI - .2); ctx.stroke();
+  });
+  ctx.restore();
+}
+function s2(t, lt) {                         // Earth is 26 m away: almost a full court
+  space(t, .6);
+  const by = CT + 1.575 * PXM, ey = by + 25.7 * PXM;
+  const z = lerp(4, 1, ease(seg(lt, 0, .9)));
+  ctx.save(); ctx.translate(W / 2, by); ctx.scale(z, z); ctx.translate(-W / 2, -by);
+  court(easeOut(seg(lt, .2, .8)));
+  glow(W / 2, by, 40, '255,150,60', 1); ball(W / 2, by, .12 * PXM, t, 1);
+  const p = ease(seg(lt, .9, 2.3)), y = lerp(by, ey, p);
+  ctx.strokeStyle = LIME; ctx.lineWidth = 5; ctx.setLineDash([16, 12]); ctx.beginPath(); ctx.moveTo(W / 2 + 60, by); ctx.lineTo(W / 2 + 60, y); ctx.stroke(); ctx.setLineDash([]);
+  const ek = easeOut(seg(lt, 2.2, 2.5));
+  glow(W / 2, ey, 34, '120,190,255', ek); planet(W / 2, ey, 3, ['#bfe6ff', '#2a7de1'], ek);
+  label('EARTH', W / 2 - 120, ey + 14, INK, 36, ek); label('SUN', W / 2 - 110, by + 14, INK, 36, easeOut(seg(lt, .6, 1)));
+  ctx.restore();
+  txt(`${(25.7 * p).toFixed(1)} m`, W / 2 + 230, y + 18, 54, LIME, 800, M, seg(lt, .9, 1.1));
+  ctx.fillStyle = 'rgba(4,3,10,.75)'; ctx.fillRect(0, 120, W, 290);
+  headline('26 m AWAY', 'almost a full basketball court', easeOut(seg(lt, .1, .5)), 250);
+}
+function s3(t, lt) {                         // Moon
+  space(t);
+  const k = easeOut(seg(lt, 0, .4));
+  headline('THE MOON', '6.6 cm from Earth', k, 300, 'a grain of sand, 0.6 mm');
+  const ex = 300, ey = 1150, R = 480, mm = 7.3;      // 1 mm = 7.3 px here
+  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 3; ctx.setLineDash([10, 14]);
+  ctx.beginPath(); ctx.arc(ex, ey, R, -.9, .9); ctx.stroke(); ctx.setLineDash([]);
+  glow(ex, ey, 70, '120,190,255', 1); planet(ex, ey, 1.1 * mm, ['#bfe6ff', '#2a7de1']);
+  const an = lerp(-.5, .1, ease(seg(lt, 0, 2.4))), mx = ex + Math.cos(an) * R, my = ey + Math.sin(an) * R;
+  glow(mx, my, 40, '230,230,230', 1); planet(mx, my, .3 * mm + 1, ['#ffffff', '#9a9a9a']);
+  const lk = easeOut(seg(lt, .5, .9));
+  ctx.globalAlpha = lk; ctx.strokeStyle = LIME; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(ex + 20, ey + 120); ctx.lineTo(ex + R - 20, ey + 120); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ex + 20, ey + 100); ctx.lineTo(ex + 20, ey + 140); ctx.moveTo(ex + R - 20, ey + 100); ctx.lineTo(ex + R - 20, ey + 140); ctx.stroke(); ctx.globalAlpha = 1;
+  label('6.6 cm', ex + R / 2, ey + 190, LIME, 48, lk);
+  label('EARTH', ex, ey - 70, INK, 36, k); label('MOON', mx, my - 50, INK, 36, k);
+}
+function s4(t, lt) {                         // Jupiter: a grape 134 m away
+  space(t);
+  const k = easeOut(seg(lt, 0, .4));
+  headline('JUPITER', 'a grape, 134 m away', k, 300);
+  ball(330, 1020, 210, 2.4 + lt * .5, 1);
+  const jk = easeOut(seg(lt, .3, .7));
+  glow(800, 1150, 70, '230,180,120', jk); planet(800, 1150, 21, ['#f6dcb4', '#b9844f'], jk, true);
+  label('24 cm', 330, 1290, MUTED, 40, 1); label('2.4 cm', 800, 1240, LIME, 44, jk);
+  const d = lerp(26, 134, ease(seg(lt, .4, 2)));
+  txt(`${fmt(d)} m`, W / 2, 1520, 120, INK, 900, M, easeOut(seg(lt, .3, .6)));
+  label('from the ball', W / 2, 1590, MUTED, 38, easeOut(seg(lt, .3, .6)));
+}
+function s5(t, lt) {                         // Neptune: 0.8 km, a 10-minute walk
+  space(t);
+  const k = easeOut(seg(lt, 0, .4));
+  headline('NEPTUNE', '0.8 km away', k, 300, 'a 10-minute walk');
+  // perspective road to the horizon
+  const hy = 760, by = 1620;
+  ctx.fillStyle = 'rgba(200,255,46,.06)'; ctx.beginPath(); ctx.moveTo(W / 2 - 6, hy); ctx.lineTo(W / 2 + 6, hy); ctx.lineTo(W / 2 + 420, by); ctx.lineTo(W / 2 - 420, by); ctx.fill();
+  ctx.strokeStyle = 'rgba(200,255,46,.5)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(W / 2 - 6, hy); ctx.lineTo(W / 2 - 420, by); ctx.moveTo(W / 2 + 6, hy); ctx.lineTo(W / 2 + 420, by); ctx.stroke();
+  for (let i = 0; i < 14; i++) { const q = ((i / 14 + lt * .35) % 1), yy = hy + (by - hy) * q * q; ctx.fillStyle = `rgba(244,244,240,${.5 * q})`; ctx.fillRect(W / 2 - 4 * q - 2, yy, 8 * q + 4, 30 * q * q + 4); }
+  glow(W / 2, hy - 10, 60, '90,140,255', 1); planet(W / 2, hy - 10, 4, ['#cfe0ff', '#3554d1']);
+  ball(W / 2, by - 40, 32, t, 1);
+  const d = lerp(134, 772, ease(seg(lt, .2, 2.1)));
+  txt(`${fmt(d)} m`, W / 2, 1200, 96, INK, 900, M, easeOut(seg(lt, .1, .4)));
+}
+function s6(t, lt) {                         // nearest star: New York -> Rome
+  space(t, .5);
+  const k = easeOut(seg(lt, 0, .4));
+  headline('NEAREST STAR', '6,900 km away', k, 280);
+  txt('ball in New York →', W / 2, 500, 44, MUTED, 600, M, easeOut(seg(lt, .3, .7)));
+  txt('ping-pong ball in Rome', W / 2, 560, 44, MUTED, 600, M, easeOut(seg(lt, .3, .7)));
+  // globe limb with an arc from NY to Rome
+  const gy = 2050, GR = 1150;
+  const gg = ctx.createRadialGradient(W / 2, gy, GR * .7, W / 2, gy, GR);
+  gg.addColorStop(0, '#0c2c55'); gg.addColorStop(1, '#2a7de1');
+  ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(W / 2, gy, GR, 0, 6.283); ctx.fill();
+  glow(W / 2, gy - GR, 300, '90,160,255', .5);
+  const ny = [190, 1150], ro = [890, 1110];
+  ctx.fillStyle = 'rgba(70,160,90,.55)';
+  ctx.beginPath(); ctx.ellipse(110, 1240, 200, 130, -.3, 0, 6.283); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(960, 1180, 230, 120, .2, 0, 6.283); ctx.fill();
+  const p = ease(seg(lt, .6, 2.6));
+  ctx.strokeStyle = LIME; ctx.lineWidth = 6; ctx.setLineDash([18, 12]); ctx.beginPath();
+  for (let i = 0; i <= 40 * p; i++) { const q = i / 40, x = lerp(ny[0], ro[0], q), y = lerp(ny[1], ro[1], q) - Math.sin(q * Math.PI) * 330; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+  ctx.stroke(); ctx.setLineDash([]);
+  ball(ny[0], ny[1], 22, t, 1); label('NEW YORK', ny[0] + 30, ny[1] + 70, INK, 34, 1);
+  const rk = easeOut(seg(lt, 2.5, 2.9));
+  glow(ro[0], ro[1], 60, '255,120,80', rk); planet(ro[0], ro[1], 9, ['#ffd0b0', '#e2452a'], rk);
+  label('ROME', ro[0] - 10, ro[1] + 70, INK, 34, rk);
+  txt(`${fmt(6900 * p)} km`, W / 2, 1520, 110, INK, 900, M, easeOut(seg(lt, .5, .8)));
+}
+function s7(t, lt) {                         // and in between: nothing
+  space(t, 1 - ease(seg(lt, 0, 1.5)) * .85);
+  txt('AND IN BETWEEN?', W / 2, 760, 84, INK, 900, F, easeOut(seg(lt, .1, .5)));
+  const k = easeOut(seg(lt, 1.2, 1.6)), s = 1 + .25 * (1 - k);
+  ctx.save(); ctx.translate(W / 2, 1000); ctx.scale(s, s); txt('ALMOST', 0, 0, 150, LIME, 900, F, k); txt('NOTHING.', 0, 150, 150, LIME, 900, F, k); ctx.restore();
+  txt('space is mostly empty', W / 2, 1320, 42, MUTED, 600, M, easeOut(seg(lt, 2, 2.4)));
+}
+function s8(t, lt) {                         // outro + loop back into the Sun
+  space(t);
+  const back = ease(seg(lt, 3.6, 4.6));
+  ball(W / 2, 1200, lerp(260, 430, back) * easeOut(seg(lt, 0, .5)), lt * .8, 1 - back);
+  sunDisc(W / 2, 1200, lerp(260, 430, back), t, back);
+  const k = easeOut(seg(lt, .2, .6));
+  txt('WHICH ONE', W / 2, 360, 104, INK, 900, F, k * (1 - back));
+  txt('SHOCKED YOU?', W / 2, 480, 104, LIME, 900, F, k * (1 - back));
+  txt('AJENT21', W / 2, 1630, 90, INK, 900, F, easeOut(seg(lt, .6, 1)) * (1 - back));
+  txt('FOLLOW FOR MORE SCALE', W / 2, 1700, 38, MUTED, 600, M, easeOut(seg(lt, .6, 1)) * (1 - back));
+}
+const SHOTS = [[0, 2.4, s0], [2.4, 5.0, s1], [5.0, 8.0, s2], [8.0, 10.6, s3], [10.6, 13.2, s4], [13.2, 15.8, s5],
+  [15.8, 19.8, s6], [19.8, 23.0, s7], [23.0, 28.0, s8]];
+window.DURATION = 28;
+window.draw = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = 'center';
+  const s = SHOTS.find(([a, b]) => t >= a && t < b) || SHOTS[SHOTS.length - 1];
+  ctx.save(); s[2](t, t - s[0]); ctx.restore();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(0, 0, W, 10); ctx.fillStyle = LIME; ctx.fillRect(0, 0, W * t / window.DURATION, 10);
+  vignette(.45); grain(t);
+  ctaPill(t, 11.6, 2.6, 'FOLLOW · NEW SCALE DAILY');
+  ctx.textAlign = 'left'; ctx.font = `700 30px ${M}`; ctx.fillStyle = 'rgba(244,244,240,.7)'; ctx.fillText('SCALE #3', 40, 70); ctx.textAlign = 'center';
+};
+</script></body></html>

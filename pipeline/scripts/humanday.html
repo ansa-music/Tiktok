@@ -1,0 +1,93 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="lib.js"></script>
+<script>
+// SCALE #5: 300,000 years of Homo sapiens squeezed into 24 hours. 1 second = ~3.5 years (0.288 s per year).
+const LIME = '#C8FF2E', INK = '#F4F4F0', MUTED = '#9A9A92';
+const SPY = 86400 / 300000;                       // seconds of "day" per real year
+// [years ago, label, emoji]
+const EVENTS = [
+  [300000, 'First modern humans', '🧍'],
+  [12000, 'Farming begins', '🌾'],
+  [4586, 'Pyramids of Giza', '🔺'],
+  [2026, 'Year 1 AD', '📜'],
+  [534, 'Columbus crosses the Atlantic', '⛵'],
+  [266, 'The Industrial Revolution', '🏭'],
+  [123, 'First airplane flight', '✈️'],
+  [57, 'Humans walk on the Moon', '🌕'],
+  [19, 'The first iPhone', '📱'],
+];
+const T0 = 2.6, SEG = 2.5;
+window.DURATION = T0 + SEG * EVENTS.length + 3.6;
+const pad2 = n => String(n).padStart(2, '0');
+function clockStr(yearsAgo) {
+  const s = Math.round(86400 - yearsAgo * SPY);
+  return `${pad2(Math.floor(s / 3600) % 24)}:${pad2(Math.floor(s / 60) % 60)}:${pad2(s % 60)}`;
+}
+function txt(s, x, y, size, col, weight = 900, fam = '"Inter Display", Inter, sans-serif', a = 1) {
+  ctx.globalAlpha = a; ctx.fillStyle = col; ctx.font = `${weight} ${size}px ${fam}`; ctx.fillText(s, x, y); ctx.globalAlpha = 1;
+}
+function emoji(e, x, y, size, a) { ctx.globalAlpha = a; ctx.font = `${size}px "Noto Color Emoji"`; ctx.fillText(e, x, y); ctx.globalAlpha = 1; }
+function sky(frac) {                              // day → dusk → night as the clock runs
+  const day = [[16, 22, 40], [52, 34, 70], [8, 8, 14]];
+  const k = clamp(frac), a = k < .5 ? day[0] : day[1], b = k < .5 ? day[1] : day[2], kk = k < .5 ? k * 2 : (k - .5) * 2;
+  const c = a.map((v, i) => Math.round(lerp(v, b[i], kk)));
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, `rgb(${c})`); g.addColorStop(1, '#050507');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function dial(secOfDay, a) {
+  const cx = W / 2, cy = 1120, R = 300, frac = secOfDay / 86400, an = frac * Math.PI * 2 - Math.PI / 2;
+  ctx.globalAlpha = a;
+  ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+  for (let i = 0; i < 24; i++) { const q = i / 24 * Math.PI * 2 - Math.PI / 2; ctx.fillStyle = i % 6 ? 'rgba(255,255,255,.3)' : INK; ctx.fillRect(cx + Math.cos(q) * (R - 28) - 4, cy + Math.sin(q) * (R - 28) - 4, 8, 8); }
+  ctx.fillStyle = 'rgba(200,255,46,.22)'; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R - 10, -Math.PI / 2, an); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = LIME; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(an) * (R - 40), cy + Math.sin(an) * (R - 40)); ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+window.draw = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.textAlign = 'center';
+  if (t < T0) {
+    sky(0); dial(0, .5);
+    const k = easeOut(seg(t, .05, .5));
+    txt('IF ALL OF HUMAN', W / 2, 520, 100, INK, 900, undefined, k);
+    txt('HISTORY WAS', W / 2, 630, 100, INK, 900, undefined, k);
+    txt('ONE DAY…', W / 2, 760, 140, LIME, 900, undefined, k);
+    txt('300,000 years → 24 hours', W / 2, 1560, 42, MUTED, 500, '"JetBrains Mono", monospace', easeOut(seg(t, .8, 1.3)));
+  } else if (t < T0 + SEG * EVENTS.length) {
+    const i = Math.floor((t - T0) / SEG), lt = t - T0 - i * SEG, ev = EVENTS[i];
+    const prev = i ? EVENTS[i - 1][0] : 300000;
+    // the clock races to the event time, then holds
+    const yrs = i === 0 ? 300000 : lerp(prev, ev[0], ease(seg(lt, 0, .8)));
+    const sec = 86400 - yrs * SPY;
+    sky(sec / 86400); dial(sec, 1);
+    const shown = i === 0 ? '00:00:00' : clockStr(yrs);
+    txt(shown, W / 2, 1640, 120, lt > .8 ? LIME : INK, 900, '"JetBrains Mono", monospace');
+    const k = easeOut(seg(lt, .75, 1.1));
+    ctx.save(); ctx.translate(W / 2, 400); const s = .85 + .15 * k; ctx.scale(s, s);
+    txt(i === 0 ? '00:00' : clockStr(ev[0]).slice(0, 5), 0, 0, 120, LIME, 900, undefined, i === 0 ? 1 : k);
+    txt(ev[1], 0, 100, 62, INK, 800, undefined, i === 0 ? 1 : k);
+    ctx.restore();
+    txt(i === 0 ? '300,000 years ago' : `${ev[0].toLocaleString('en-US')} years ago`, W / 2, 590, 40, MUTED, 600, '"JetBrains Mono", monospace', i === 0 ? 1 : k);
+    emoji(ev[2], W / 2, 1160, 140, i === 0 ? 1 : k);
+    if (i > 0) flash(.3 * clamp(1 - Math.abs(lt - .8) * 6));
+  } else {
+    const lt = t - T0 - SEG * EVENTS.length;
+    sky(1); dial(86399, .35);
+    const k = easeOut(seg(lt, .1, .5));
+    txt('Everything since', W / 2, 640, 72, INK, 800, undefined, k);
+    txt('the year 1 AD fits', W / 2, 730, 72, INK, 800, undefined, k);
+    txt('into the last', W / 2, 820, 72, INK, 800, undefined, k);
+    txt('10 MINUTES.', W / 2, 980, 140, LIME, 900, undefined, easeOut(seg(lt, .7, 1.1)));
+    txt('AJENT21 · SCALE #5', W / 2, 1720, 40, INK, 800, '"JetBrains Mono", monospace', easeOut(seg(lt, 1.6, 2)));
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctaPill(t, 10.6, 2.6, 'FOLLOW · NEW SCALE DAILY');
+  ctx.textAlign = 'left'; ctx.font = '700 30px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(244,244,240,.7)'; ctx.fillText('SCALE #5', 40, 70); ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(0, 0, W, 10); ctx.fillStyle = LIME; ctx.fillRect(0, 0, W * t / window.DURATION, 10);
+  vignette(.45); grain(t);
+};
+</script></body></html>

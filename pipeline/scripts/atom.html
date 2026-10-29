@@ -1,0 +1,125 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="lib.js"></script>
+<script>
+// SCALE #4: zoom from a human hair down to a single atom, then inside it.
+const LIME = '#C8FF2E', INK = '#F4F4F0', MUTED = '#9A9A92';
+// [label, size text, sub, draw kind, accent]
+const STAGES = [
+  ['A HUMAN HAIR', '0.07 mm', 'About as thin as we can see', 'hair', '#d9b38c'],
+  ['A RED BLOOD CELL', '0.007 mm', '10 of them fit across one hair', 'cell', '#ff4d5e'],
+  ['A BACTERIUM', '0.002 mm', 'E. coli, one whole living thing', 'bact', '#7fe3a0'],
+  ['A VIRUS', '0.0001 mm', '20 fit along one bacterium', 'virus', '#ffb347'],
+  ['DNA', '0.000002 mm', 'Your genetic code, 2 nm wide', 'dna', '#7fd4ff'],
+  ['AN ATOM', '0.0000001 mm', 'Half a million fit across one hair', 'atom', LIME],
+];
+const T0 = 2.4, SEG = 3.6;            // hook length, seconds per stage
+window.DURATION = T0 + SEG * STAGES.length + 5.2;
+
+function bg(t, k) {
+  const g = ctx.createRadialGradient(W / 2, H / 2, 50, W / 2, H / 2, H * .8);
+  g.addColorStop(0, `rgb(${18 + 10 * k},${20 + 6 * k},${28 + 20 * k})`); g.addColorStop(1, '#050507');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const r = rng(Math.floor(t * 2) + 7); ctx.fillStyle = 'rgba(255,255,255,.05)';
+  for (let i = 0; i < 60; i++) { ctx.beginPath(); ctx.arc(r() * W, r() * H, 1 + r() * 3, 0, Math.PI * 2); ctx.fill(); }
+}
+function drawThing(kind, x, y, s, t, col, a) {
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(s, s);
+  if (kind === 'hair') {
+    ctx.rotate(-.35);
+    const g = ctx.createLinearGradient(-90, 0, 90, 0); g.addColorStop(0, '#5a3a22'); g.addColorStop(.5, col); g.addColorStop(1, '#5a3a22');
+    ctx.fillStyle = g; ctx.fillRect(-90, -1200, 180, 2400);
+    ctx.strokeStyle = 'rgba(40,20,10,.5)'; ctx.lineWidth = 6;
+    for (let i = -1200; i < 1200; i += 70) { ctx.beginPath(); ctx.moveTo(-90, i); ctx.lineTo(90, i + 30); ctx.stroke(); }   // cuticle scales
+  } else if (kind === 'cell') {
+    const g = ctx.createRadialGradient(0, 0, 40, 0, 0, 260); g.addColorStop(0, '#b3132b'); g.addColorStop(.55, col); g.addColorStop(1, '#8a0f22');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, 260, 250, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(120,0,20,.55)'; ctx.beginPath(); ctx.ellipse(0, 0, 120, 110, 0, 0, Math.PI * 2); ctx.fill();   // dimple
+  } else if (kind === 'bact') {
+    ctx.rotate(.4 + Math.sin(t) * .05);
+    ctx.strokeStyle = col; ctx.lineWidth = 6;
+    for (let i = 0; i < 8; i++) { ctx.beginPath(); ctx.moveTo(-200 + i * 50, 90); ctx.quadraticCurveTo(-180 + i * 50 + Math.sin(t * 6 + i) * 40, 220, -220 + i * 50, 320); ctx.stroke(); }   // flagella
+    ctx.fillStyle = '#2f8f5b'; ctx.beginPath(); ctx.roundRect(-300, -110, 600, 220, 110); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 10; ctx.stroke();
+  } else if (kind === 'virus') {
+    ctx.rotate(t * .4);
+    ctx.strokeStyle = col; ctx.lineWidth = 12; ctx.fillStyle = col;
+    for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 200, Math.sin(a) * 200); ctx.lineTo(Math.cos(a) * 280, Math.sin(a) * 280); ctx.stroke();
+      ctx.beginPath(); ctx.arc(Math.cos(a) * 290, Math.sin(a) * 290, 18, 0, Math.PI * 2); ctx.fill(); }
+    const g = ctx.createRadialGradient(-60, -60, 20, 0, 0, 210); g.addColorStop(0, '#ffd28a'); g.addColorStop(1, '#b8620d');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 205, 0, Math.PI * 2); ctx.fill();
+  } else if (kind === 'dna') {
+    for (let i = -14; i <= 14; i++) {
+      const y2 = i * 60, ph = i * .5 + t * 2, x1 = Math.sin(ph) * 170, x2 = -x1, front = Math.cos(ph) > 0;
+      ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(x1, y2); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.fillStyle = front ? col : '#3a6f8a'; ctx.beginPath(); ctx.arc(x1, y2, 26, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = front ? '#3a6f8a' : col; ctx.beginPath(); ctx.arc(x2, y2, 26, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (kind === 'atom') {
+    const g = ctx.createRadialGradient(0, 0, 10, 0, 0, 340); g.addColorStop(0, 'rgba(200,255,46,.22)'); g.addColorStop(1, 'rgba(200,255,46,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 340, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(200,255,46,.5)'; ctx.lineWidth = 4;
+    [0, 1.05, 2.1].forEach((rot, i) => { ctx.save(); ctx.rotate(rot); ctx.beginPath(); ctx.ellipse(0, 0, 300, 100, 0, 0, Math.PI * 2); ctx.stroke();
+      const a = t * (2 + i * .4) + i * 2; ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(Math.cos(a) * 300, Math.sin(a) * 100, 16, 0, Math.PI * 2); ctx.fill(); ctx.restore(); });
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+function txt(s, x, y, size, col, weight = 900, fam = '"Inter Display", Inter, sans-serif', a = 1) {
+  ctx.globalAlpha = a; ctx.fillStyle = col; ctx.font = `${weight} ${size}px ${fam}`; ctx.fillText(s, x, y); ctx.globalAlpha = 1;
+}
+function zoomCounter(n, a) {
+  ctx.globalAlpha = a; ctx.fillStyle = 'rgba(10,10,12,.6)'; ctx.beginPath(); ctx.roundRect(W / 2 - 230, 1560, 460, 90, 45); ctx.fill();
+  txt(`ZOOM ×${n.toLocaleString('en-US')}`, W / 2, 1620, 44, LIME, 800, '"JetBrains Mono", monospace', a);
+}
+const ZOOMS = [100, 1000, 3500, 70000, 3500000, 70000000];
+
+window.draw = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.textAlign = 'center';
+  if (t < T0) {                                     // hook: a single hair on black
+    bg(t, 0);
+    drawThing('hair', W / 2, H / 2 + 200, .12 + t * .02, t, STAGES[0][4], 1);
+    const k = easeOut(seg(t, .05, .5));
+    txt('ZOOM INTO', W / 2, 560, 110, INK, 900, undefined, k);
+    txt('ONE HAIR…', W / 2, 680, 110, LIME, 900, undefined, k);
+    txt('…until you hit an atom', W / 2, 770, 44, MUTED, 500, '"JetBrains Mono", monospace', easeOut(seg(t, .7, 1.2)));
+  } else if (t < T0 + SEG * STAGES.length) {
+    const i = Math.floor((t - T0) / SEG), lt = t - T0 - i * SEG, st = STAGES[i];
+    bg(t, i / STAGES.length);
+    // the next object grows out of the centre of this one (continuous zoom)
+    const grow = 1 + 1.6 * ease(seg(lt, 0, SEG));
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 640, W, H); ctx.clip();   // objects stay below the caption block
+    drawThing(st[3], W / 2, 1060, .9 * grow, t, st[4], 1 - seg(lt, SEG - .45, SEG));
+    if (i + 1 < STAGES.length) drawThing(STAGES[i + 1][3], W / 2, 1060, .04 + .5 * seg(lt, SEG - .9, SEG), t, STAGES[i + 1][4], seg(lt, SEG - .9, SEG - .3));
+    ctx.restore();
+    const k = easeOut(seg(lt, .05, .45));
+    ctx.save(); ctx.translate(W / 2, 360); const s = .85 + .15 * k; ctx.scale(s, s);
+    txt(st[0], 0, 0, 96, INK, 900, undefined, k);
+    txt(st[1], 0, 110, 84, st[4], 900, '"JetBrains Mono", monospace', k);
+    ctx.restore();
+    txt(st[2], W / 2, 560, 48, MUTED, 600, undefined, easeOut(seg(lt, .5, .9)));
+    zoomCounter(ZOOMS[i], k);
+    flash(.35 * clamp(1 - lt * 6));
+  } else {                                          // payoff: inside the atom it's almost all empty
+    const lt = t - T0 - SEG * STAGES.length;
+    bg(t, 1);
+    const zoomIn = 1 + 2.5 * ease(seg(lt, 0, 2.2));
+    drawThing('atom', W / 2, 1040, zoomIn, t, LIME, 1 - seg(lt, 1.6, 2.4));
+    const k = easeOut(seg(lt, 1.8, 2.3));
+    ctx.fillStyle = LIME; ctx.globalAlpha = k; ctx.beginPath(); ctx.arc(W / 2, 1040, 6, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    txt('IF AN ATOM WERE', W / 2, 380, 80, INK, 900, undefined, easeOut(seg(lt, .2, .6)));
+    txt('A FOOTBALL STADIUM…', W / 2, 480, 80, INK, 900, undefined, easeOut(seg(lt, .2, .6)));
+    txt('…its nucleus would be a pea.', W / 2, 1300, 56, LIME, 800, undefined, k);
+    txt('Everything else is empty space.', W / 2, 1380, 48, MUTED, 600, undefined, easeOut(seg(lt, 2.6, 3)));
+    txt('AJENT21 · SCALE #4', W / 2, 1720, 40, INK, 800, '"JetBrains Mono", monospace', easeOut(seg(lt, 3.4, 3.8)));
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctaPill(t, 11.0, 2.6, 'FOLLOW · NEW SCALE DAILY');
+  ctx.textAlign = 'left'; ctx.font = '700 30px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(244,244,240,.7)'; ctx.fillText('SCALE #4', 40, 70); ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(0, 0, W, 10); ctx.fillStyle = LIME; ctx.fillRect(0, 0, W * t / window.DURATION, 10);
+  vignette(.45); grain(t);
+};
+</script></body></html>

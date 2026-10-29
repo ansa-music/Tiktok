@@ -1,0 +1,23 @@
+{
+  "duration": 25,
+  "pad": [98.0, 146.83, 196.0, 246.94, 293.66],
+  "pulse": {"start": 2.6, "end": 21.4, "bpm": 120, "hz": 55},
+  "hits": [
+    {"file": "air-whoosh-powerful", "at": 0.0, "gain": 0.8},
+    {"file": "impact-cine-big", "at": 0.1, "gain": 0.7},
+    {"file": "bass-hit-futuristic", "at": 2.6, "gain": 0.8},
+    {"file": "clock-tick-single", "at": 5.3, "gain": 0.7},
+    {"file": "clock-tick-single", "at": 6.3, "gain": 0.7},
+    {"file": "clock-tick-single", "at": 7.3, "gain": 0.7},
+    {"file": "warp-slide", "at": 8.0, "gain": 0.6},
+    {"file": "air-woosh-quick", "at": 10.6, "gain": 0.8},
+    {"file": "sparkle-wand", "at": 12.4, "gain": 0.5},
+    {"file": "air-woosh-quick", "at": 13.0, "gain": 0.8},
+    {"file": "sparkle-wand", "at": 14.8, "gain": 0.5},
+    {"file": "sweep-metal-quick", "at": 15.4, "gain": 0.6},
+    {"file": "stomp-apocalyptic", "at": 17.8, "gain": 0.6},
+    {"file": "light-aura", "at": 18.4, "gain": 0.7},
+    {"file": "impact-epic-trailer", "at": 21.4, "gain": 0.8},
+    {"file": "air-whoosh-powerful", "at": 23.8, "gain": 0.7}
+  ]
+}

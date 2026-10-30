@@ -1,0 +1,147 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800;900&family=JetBrains+Mono:wght@600;700;800&display=block">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="lib.js"></script>
+<script>
+// Scale series #8: the tallest things on Earth, climbing a log-scale altimeter. Heights (sources):
+// average adult human ~1.7 m (NCD-RisC 2016: men 171 cm worldwide); adult male giraffe up to ~5.5 m (Smithsonian NZP);
+// Statue of Liberty ground to torch 93 m (NPS); Hyperion coast redwood 116.07 m (2019 re-measure, Wikipedia);
+// Great Pyramid of Giza 138.5 m today, 146.6 m originally (Wikipedia); Eiffel Tower 330 m since 2022 antenna (SETE);
+// Burj Khalifa 828 m (CTBUH); Angel Falls 979 m total drop (USGS/Guinness); Everest 8,848.86 m (China–Nepal 2020);
+// Mauna Kea 4,207 m above sea level, ~10,210 m from its base on the sea floor (USGS HVO / Wikipedia),
+// i.e. ~6,000 m of it is below sea level (10,210 - 4,207 = 6,003).
+const LIME = '#C8FF2E', INK = '#F4F4F0', MUTED = '#c9d6e2', SIL = '#0b1220';
+const GROUND = 1560, MAXH = 940, MAXW = 640, CX = 660, PX = 210;
+// [t, height m, width m, headline, sub, note, kind]
+const MARKS = [
+  [0.0, 1.7, 0.5, '1.7 m', 'An average human', '', 'human'],
+  [2.4, 5.5, 3.2, '5.5 m', 'A giraffe', '', 'giraffe'],
+  [4.8, 93, 38, '93 m', 'Statue of Liberty', '', 'statue'],
+  [7.2, 116, 30, '116 m', 'Hyperion', 'the tallest living tree', 'tree'],
+  [9.6, 138.5, 230, '138.5 m', 'Great Pyramid of Giza', '', 'pyramid'],
+  [12.0, 330, 125, '330 m', 'Eiffel Tower', '', 'eiffel'],
+  [14.6, 828, 160, '828 m', 'Burj Khalifa', 'the tallest building', 'burj'],
+  [17.2, 979, 700, '979 m', 'Angel Falls', 'the tallest waterfall', 'falls'],
+  [20.0, 8849, 9000, '8,849 m', 'Mount Everest', 'highest point above sea level', 'everest'],
+  [23.0, 10210, 12000, '10,210 m', 'Mauna Kea', 'taller from base to peak…', 'maunakea'],
+];
+const scaleOf = m => Math.min(MAXH / m[1], MAXW / m[2]);
+const CLOUDS = (() => { const r = rng(4); return Array.from({ length: 14 }, () => ({ x: r() * W, y: r() * H, s: .6 + r() * .9 })); })();
+
+function shape(kind, x, base, h, t, a) {
+  // silhouette of `kind`, `h` px tall, standing at (x, base)
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(x, base); ctx.fillStyle = SIL; ctx.strokeStyle = 'rgba(200,255,46,.55)'; ctx.lineWidth = 3;
+  const P = pts => { ctx.beginPath(); pts.forEach(([px, py], i) => i ? ctx.lineTo(px * h, -py * h) : ctx.moveTo(px * h, -py * h)); ctx.closePath(); ctx.fill(); ctx.stroke(); };
+  if (kind === 'human') {
+    ctx.beginPath(); ctx.arc(0, -.9 * h, .1 * h, 0, 7); ctx.fill(); ctx.stroke();
+    P([[-.13, .78], [.13, .78], [.15, .42], [.08, .42], [.07, 0], [.01, 0], [0, .38], [-.01, 0], [-.07, 0], [-.08, .42], [-.15, .42]]);
+  } else if (kind === 'giraffe') {
+    P([[-.5, .42], [-.45, .58], [.02, .6], [.12, .96], [.3, 1], [.3, .93], [.19, .9], [.15, .55], [.18, .42], [.14, 0], [.09, 0], [.08, .38], [-.36, .38], [-.37, 0], [-.42, 0], [-.44, .4]]);
+    ctx.fillStyle = 'rgba(200,255,46,.25)'; [[-.3, .5], [-.1, .5], [.08, .7], [.14, .82]].forEach(([sx, sy]) => { ctx.beginPath(); ctx.arc(sx * h, -sy * h, .035 * h, 0, 7); ctx.fill(); });
+  } else if (kind === 'statue') {
+    P([[-.2, 0], [.2, 0], [.16, .1], [.11, .1], [.11, .5], [-.11, .5], [-.11, .1], [-.16, .1]]);
+    P([[-.08, .5], [.08, .5], [.07, .8], [.08, .9], [.1, .98], [.12, .98], [.11, .88], [.06, .78], [.05, .84], [-.05, .84], [-.06, .72], [-.09, .66]]);
+    ctx.beginPath(); ctx.arc(0, -.87 * h, .035 * h, 0, 7); ctx.fill();
+    ctx.fillStyle = `rgba(255,190,60,${.7 + .3 * Math.sin(t * 9)})`; ctx.beginPath(); ctx.ellipse(.11 * h, -1 * h, .02 * h, .03 * h, 0, 0, 7); ctx.fill();
+  } else if (kind === 'tree') {
+    ctx.fillStyle = '#2a160c'; ctx.fillRect(-.05 * h, -.45 * h, .1 * h, .45 * h); ctx.fillStyle = SIL;
+    for (let i = 0; i < 5; i++) { const y0 = .3 + i * .14, w0 = .26 - i * .04; P([[-w0, y0], [w0, y0], [0, y0 + .28]]); }
+  } else if (kind === 'pyramid') {
+    P([[-.83, 0], [.83, 0], [0, 1]]);
+    ctx.strokeStyle = 'rgba(200,255,46,.18)'; for (let i = 1; i < 8; i++) { const y = i / 8; ctx.beginPath(); ctx.moveTo(-.83 * h * (1 - y), -y * h); ctx.lineTo(.83 * h * (1 - y), -y * h); ctx.stroke(); }
+  } else if (kind === 'eiffel') {
+    P([[-.19, 0], [-.11, 0], [-.06, .1], [.06, .1], [.11, 0], [.19, 0], [.1, .2], [.05, .45], [.02, .82], [.006, .93], [.003, 1], [-.003, 1], [-.006, .93], [-.02, .82], [-.05, .45], [-.1, .2]]);
+    ctx.fillStyle = LIME; [[.2, .13], [.45, .07], [.82, .03]].forEach(([y, w]) => ctx.fillRect(-w * h, -y * h - 3, w * 2 * h, 6));
+  } else if (kind === 'burj') {
+    P([[-.1, 0], [.1, 0], [.09, .25], [.07, .25], [.065, .45], [.045, .45], [.04, .62], [.025, .62], [.02, .76], [.008, .76], [.004, 1], [-.004, 1], [-.008, .7], [-.02, .7], [-.03, .55], [-.05, .55], [-.06, .35], [-.08, .35]]);
+  } else if (kind === 'falls') {
+    P([[-.45, 0], [.45, 0], [.45, .94], [.2, 1], [-.1, 1], [-.12, .9], [-.45, .85]]);
+    const g = ctx.createLinearGradient(0, -h, 0, 0); g.addColorStop(0, '#dff6ff'); g.addColorStop(1, '#7cc9f0');
+    ctx.fillStyle = g; ctx.fillRect(-.1 * h, -.995 * h, .12 * h, .995 * h);
+    ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 3;
+    for (let i = 0; i < 6; i++) { const y = ((t * 1.2 + i / 6) % 1) * h; ctx.beginPath(); ctx.moveTo(-.09 * h + i * .02 * h, -h + y); ctx.lineTo(-.09 * h + i * .02 * h, -h + y + .12 * h); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(-.04 * h, 0, .2 * h, .05 * h, 0, 0, 7); ctx.fill();
+  } else if (kind === 'everest' || kind === 'maunakea') {
+    if (kind === 'everest') P([[-1, 0], [-.55, .45], [-.4, .38], [-.12, .9], [0, 1], [.15, .82], [.3, .86], [.6, .4], [1, 0]]);
+    else P([[-1, 0], [-.6, .3], [-.3, .7], [-.1, .97], [.05, 1], [.25, .9], [.6, .45], [1, 0]]);
+    ctx.fillStyle = '#e8f1f8';
+    if (kind === 'everest') P([[-.12, .9], [0, 1], [.15, .82], [.1, .78], [.03, .85], [-.05, .8]]);
+    else P([[-.1, .97], [.05, 1], [.25, .9], [.18, .86], [.05, .93], [-.04, .9]]);
+  }
+  ctx.restore();
+}
+
+function skyAt(alt) {
+  // brighter near the ground, deep blue near 10 km
+  const k = clamp(Math.log10(1 + alt) / 4);
+  const top = [lerp(70, 8, k), lerp(150, 20, k), lerp(230, 70, k)], bot = [lerp(190, 40, k), lerp(225, 90, k), lerp(250, 170, k)];
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, `rgb(${top.map(Math.round)})`); g.addColorStop(1, `rgb(${bot.map(Math.round)})`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+window.DURATION = 28;
+window.draw = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.textAlign = 'center';
+  let i = 0; MARKS.forEach((m, j) => { if (t >= m[0]) i = j; });
+  const cur = MARKS[i], prev = MARKS[i - 1], since = t - cur[0], k = easeOut(clamp(since / .7));
+  // altitude readout eases from previous height to current on a log scale
+  const alt = prev ? Math.pow(10, lerp(Math.log10(prev[1]), Math.log10(cur[1]), k)) : cur[1];
+  skyAt(alt);
+  // clouds stream downward while we climb
+  const climb = MARKS.slice(0, i).length * 600 + k * 600;
+  ctx.fillStyle = 'rgba(255,255,255,.22)';
+  CLOUDS.forEach(c2 => { const y = ((c2.y + climb * c2.s) % (H + 300)) - 150; ctx.beginPath(); ctx.ellipse(c2.x, y, 150 * c2.s, 40 * c2.s, 0, 0, 7); ctx.ellipse(c2.x + 70 * c2.s, y - 25 * c2.s, 90 * c2.s, 38 * c2.s, 0, 0, 7); ctx.fill(); });
+  // ground
+  ctx.fillStyle = '#10151d'; ctx.fillRect(0, GROUND, W, H - GROUND);
+  ctx.fillStyle = LIME; ctx.fillRect(0, GROUND, W, 4);
+  const s = scaleOf(cur);
+  if (cur[6] === 'maunakea') {
+    // ~6,000 m of Mauna Kea sits below sea level
+    const wy = GROUND - 6003 * s * k;
+    shape('maunakea', CX + 60, GROUND, cur[1] * s, t, 1);
+    ctx.fillStyle = 'rgba(20,110,190,.6)'; ctx.fillRect(CX + 60 - cur[2] / 2 * s - 20, wy, cur[2] * s + 40, GROUND - wy);
+    ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillRect(CX + 60 - cur[2] / 2 * s - 20, wy, cur[2] * s + 40, 4);
+    if (prev) shape(prev[6], PX - 40, GROUND, prev[1] * s, t, .9);
+    if (k > .5) { ctx.globalAlpha = seg(t, cur[0] + .4, cur[0] + .9); ctx.textAlign = 'right'; ctx.fillStyle = INK; ctx.font = '700 34px "JetBrains Mono", monospace';
+      ctx.fillText('SEA LEVEL', W - 40, wy - 14); ctx.fillText('6,000 m', W - 40, wy + 60); ctx.fillText('UNDERWATER', W - 40, wy + 102); ctx.textAlign = 'center'; ctx.globalAlpha = 1; }
+  } else {
+    // new object grows in on the right; the previous one shrinks to scale on the left
+    if (prev) { const ps = lerp(scaleOf(prev), s, k); shape(prev[6], lerp(CX, PX, k), GROUND, prev[1] * ps, t, 1); }
+    shape(cur[6], lerp(CX + 300, CX, k), GROUND, cur[1] * s, t, prev ? k : 1);
+  }
+  // headline
+  const hk = prev ? easeOut(clamp((since - .15) / .4)) : 1, sc = .9 + .1 * hk;
+  ctx.save(); ctx.translate(W / 2, 330); ctx.scale(sc, sc); ctx.globalAlpha = hk;
+  ctx.fillStyle = LIME; ctx.font = '900 150px Inter, sans-serif'; ctx.fillText(cur[3], 0, 0);
+  ctx.fillStyle = INK; ctx.font = '800 62px Inter, sans-serif'; ctx.fillText(cur[4], 0, 95);
+  if (cur[5]) { ctx.fillStyle = MUTED; ctx.font = '600 40px "JetBrains Mono", monospace'; ctx.fillText(cur[5], 0, 160); }
+  ctx.restore();
+  // hook title on the first beat
+  if (i === 0) { ctx.fillStyle = INK; ctx.font = '900 76px Inter, sans-serif'; const hk0 = easeOut(seg(t, 0, .4)); ctx.globalAlpha = hk0;
+    ctx.fillText('HOW TALL CAN', W / 2, 520); ctx.fillText('THINGS GET?', W / 2, 598); ctx.globalAlpha = 1; }
+  if (cur[6] === 'maunakea' && since > 1.4) {
+    const a = easeOut(seg(since, 1.4, 1.8)); ctx.globalAlpha = a; ctx.fillStyle = 'rgba(10,10,12,.6)'; ctx.fillRect(60, 560, W - 120, 120);
+    ctx.fillStyle = INK; ctx.font = '800 50px Inter, sans-serif'; ctx.fillText('…than Everest. Most of it is hidden.', W / 2, 638); ctx.globalAlpha = 1;
+  }
+  // altimeter (left edge)
+  const gx = 40, gy0 = 260, gy1 = GROUND - 40, p = Math.log10(1 + alt) / Math.log10(1 + 10210);
+  ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.fillRect(gx, gy0, 10, gy1 - gy0);
+  ctx.fillStyle = LIME; ctx.fillRect(gx, gy1 - (gy1 - gy0) * p, 10, (gy1 - gy0) * p);
+  ctx.beginPath(); ctx.arc(gx + 5, gy1 - (gy1 - gy0) * p, 15, 0, 7); ctx.fill();
+  // end card: no fade to black, the loop restarts on the human
+  if (t > 25.6) { const a = easeOut(seg(t, 25.6, 26.1)); ctx.globalAlpha = a;
+    ctx.fillStyle = 'rgba(10,10,12,.72)'; ctx.beginPath(); ctx.roundRect(120, 1180, W - 240, 300, 30); ctx.fill();
+    ctx.fillStyle = LIME; ctx.font = '900 92px Inter, sans-serif'; ctx.fillText('AJENT21', W / 2, 1300);
+    ctx.fillStyle = INK; ctx.font = '700 40px "JetBrains Mono", monospace'; ctx.fillText('Which one surprised you?', W / 2, 1380);
+    ctx.fillStyle = MUTED; ctx.font = '600 32px "JetBrains Mono", monospace'; ctx.fillText('FOLLOW FOR MORE SCALE', W / 2, 1436); ctx.globalAlpha = 1; }
+  // progress bar
+  ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(0, 0, W, 10); ctx.fillStyle = LIME; ctx.fillRect(0, 0, W * t / window.DURATION, 10);
+  vignette(.35); grain(t);
+  ctaPill(t, 11.4, 2.8, 'FOLLOW · NEW SCALE DAILY');
+  ctx.textAlign = 'left'; ctx.font = '700 30px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(244,244,240,.8)'; ctx.fillText('SCALE #8', 40, 70);
+  ctx.textAlign = 'right'; ctx.fillText(`ALT ${alt < 1000 ? String(Math.round(alt * 10) / 10) : Math.round(alt).toLocaleString('en-US')} m`, W - 40, 70); ctx.textAlign = 'center';
+};
+</script></body></html>

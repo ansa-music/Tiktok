@@ -1,0 +1,21 @@
+{
+  "duration": 28,
+  "pad": [98.0, 146.83, 196.0, 246.94, 293.66],
+  "pulse": {"start": 9.6, "end": 20.0, "bpm": 112, "hz": 49},
+  "hits": [
+    {"file": "impact-cine-big", "at": 0.0, "gain": 0.7},
+    {"file": "air-woosh-quick", "at": 2.3, "gain": 0.8},
+    {"file": "air-woosh-quick", "at": 4.7, "gain": 0.8},
+    {"file": "sparkle-wand", "at": 5.0, "gain": 0.5},
+    {"file": "air-woosh-quick", "at": 7.1, "gain": 0.8},
+    {"file": "stomp-apocalyptic", "at": 9.6, "gain": 0.6},
+    {"file": "sweep-metal-quick", "at": 11.9, "gain": 0.6},
+    {"file": "warp-slide", "at": 14.4, "gain": 0.6},
+    {"file": "stardust-swish", "at": 17.1, "gain": 0.6},
+    {"file": "air-whoosh-powerful", "at": 18.6, "gain": 0.6},
+    {"file": "impact-epic-trailer", "at": 19.9, "gain": 0.9},
+    {"file": "bass-hit-futuristic", "at": 22.9, "gain": 0.8},
+    {"file": "light-aura", "at": 24.4, "gain": 0.6},
+    {"file": "space-intro-futuristic", "at": 25.6, "gain": 0.5}
+  ]
+}

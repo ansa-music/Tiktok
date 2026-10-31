@@ -1,0 +1,22 @@
+{
+  "duration": 16,
+  "pad": [82.41, 98.0, 123.47, 164.81, 196.0],
+  "pulse": {"start": 6.0, "end": 12.6, "bpm": 150, "hz": 41},
+  "hits": [
+    {"file": "sweep-metal-quick", "at": 0.0, "gain": 0.9},
+    {"file": "impact-cine-big", "at": 0.1, "gain": 0.7},
+    {"file": "impact-epic-trailer", "at": 1.6, "gain": 0.8},
+    {"file": "air-whoosh-powerful", "at": 1.8, "gain": 0.6},
+    {"file": "stomp-apocalyptic", "at": 3.6, "gain": 0.6},
+    {"file": "heartbeat-single", "at": 4.6, "gain": 0.8},
+    {"file": "heartbeat-single", "at": 5.4, "gain": 0.8},
+    {"file": "air-woosh-quick", "at": 6.0, "gain": 0.9},
+    {"file": "impact-epic-trailer", "at": 7.4, "gain": 1.0},
+    {"file": "sweep-metal-quick", "at": 7.7, "gain": 0.8},
+    {"file": "sweep-metal-quick", "at": 7.95, "gain": 0.8},
+    {"file": "light-aura", "at": 10.2, "gain": 0.6},
+    {"file": "bass-hit-futuristic", "at": 11.4, "gain": 0.8},
+    {"file": "bass-hit-futuristic", "at": 12.0, "gain": 0.8},
+    {"file": "space-intro-futuristic", "at": 12.7, "gain": 0.5}
+  ]
+}

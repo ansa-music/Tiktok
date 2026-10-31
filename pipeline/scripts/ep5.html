@@ -1,0 +1,121 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800;900&family=JetBrains+Mono:wght@500;700;800&display=block">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="lib.js"></script>
+<script src="lib2.js"></script>
+<script>
+// Episode 5: THE MIRROR. Continues from Ep.4's cliffhanger (the rival with the white scarf) and works after
+// either gate: the gate shatters mid-duel and both fighters fall back into the sakura valley from Ep.1.
+// The reveal: under the rival's white scarf is the hero's own red scarf. Ends with an ALLY / ENEMY vote for Ep.6.
+// No facts to verify (fiction). All on-screen text is English; no emoji drawn.
+const DAWN = ['#1b0b2e', '#8a2f55', '#ffb37a'], MTN = ['#4a1d45', '#311236', '#1d0a24'];
+const RED = '#e8263e', WHITE = '#e9eef2';
+function rival(x, y, s, t, o = {}) {              // mirrored hero, white scarf (its red scarf shows through as it burns)
+  ctx.save(); ctx.translate(x, y); ctx.scale(-1, 1); ctx.translate(-x, -y);
+  hero(x, y, s, t, Object.assign({ rim: '#ffffff', scarf: WHITE }, o));
+  ctx.restore();
+}
+function valley(t, drift = 0, shake = 0) {
+  sky(...DAWN); camera(1.03, 0, 0, shake, t);
+  sun(W / 2, 1060, 230, t); mountains(MTN, drift, 0); cliff('#0a0612');
+}
+function shards(t, k, cx = W / 2, cy = 900) {     // the gate breaking apart: warm and cold pieces together
+  const r = rng(41);
+  for (let i = 0; i < 70; i++) {
+    const a = r() * 6.283, d = k * (150 + r() * 1100), s = 14 + r() * 40, rot = t * (r() - .5) * 8;
+    ctx.save(); ctx.translate(cx + Math.cos(a) * d, cy + Math.sin(a) * d); ctx.rotate(rot);
+    ctx.fillStyle = i % 2 ? `rgba(255,150,60,${1 - k * .6})` : `rgba(90,210,255,${1 - k * .6})`;
+    ctx.beginPath(); ctx.moveTo(0, -s); ctx.lineTo(s * .6, s * .4); ctx.lineTo(-s * .5, s * .6); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+}
+function caption(txt, t0, t, y = 360, col = '#F4F4F0', size = 96) {
+  const k = easeOut(seg(t, t0, t0 + .3)); if (k <= 0) return;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = k; ctx.textAlign = 'center';
+  ctx.font = `900 ${size}px Inter, sans-serif`; const w = ctx.measureText(txt).width;
+  ctx.fillStyle = 'rgba(5,5,10,.55)'; ctx.fillRect(W / 2 - w / 2 - 40, y - size * .85, w + 80, size * 1.2);
+  ctx.fillStyle = col; ctx.fillText(txt, W / 2, y + (1 - k) * 20); ctx.restore();
+}
+
+// shots
+function s1(t, lt) {                             // cold open: blades locked inside the cracking gate
+  sky('#05020c', '#2a0716', '#4a0c1c'); camera(1.25 - lt * .1, 0, 0, 14, t);
+  radialLines(W / 2, 960, .8, t, 'rgba(255,255,255,', 50);
+  shards(t, seg(lt, .9, 1.6) * .5);
+  hero(W / 2 - 240, 1500, 1.8, t, { blade: 1, crouch: .5, lean: .25, rim: '#ffb35c' });
+  rival(W / 2 + 240, 1500, 1.8, t, { blade: 1, crouch: .5, lean: .25 });
+  const sp = rng(Math.floor(t * 30)); ctx.fillStyle = '#fff3b0';     // sparks at the crossing point
+  for (let i = 0; i < 40; i++) { const a = sp() * 6.28, d = sp() * 220; ctx.fillRect(W / 2 + Math.cos(a) * d, 930 + Math.sin(a) * d, 5, 5); }
+  flash(.5 * Math.max(0, Math.sin(lt * 18)) * (1 - lt / 1.6));
+}
+function s2(t, lt) {                             // the gate shatters: both fall into the dawn valley
+  valley(t, lt * 60); shards(t, .5 + seg(lt, 0, 2) * .5, W / 2, 500);
+  const k = seg(lt, 0, 2);
+  ctx.save(); ctx.translate(380, lerp(300, 1100, k)); ctx.rotate(lt * 3); hero(0, 0, .9, t, { rim: '#ffb35c' }); ctx.restore();
+  ctx.save(); ctx.translate(720, lerp(150, 1000, k)); ctx.rotate(-lt * 3); hero(0, 0, .9, t, { rim: '#ffffff', scarf: WHITE }); ctx.restore();
+  petals(t, 'rgba(255,170,200,.85)', 2); hLines(t, .25, 'rgba(255,255,255,');
+  flash(clamp(1 - lt * 3));
+}
+function s3(t, lt) {                             // standoff on the Ep.1 cliff
+  valley(t, 40 + lt * 30); petals(t, 'rgba(255,170,200,.85)', 1.6);
+  hero(250, 1515, 1.15, t, { blade: 1, rim: '#ffb35c' });
+  rival(600, 1512, 1.15, t, { blade: 1 });
+  caption('WHO ARE YOU?', .3, lt, 380, '#F4F4F0', 100);
+}
+function s4(t, lt) {                             // rival dashes in, close up
+  ctx.fillStyle = '#0a0612'; ctx.fillRect(0, 0, W, H);
+  const k = seg(lt, 0, 1.4); camera(1 + k * .3, 0, 0, 8 + 20 * k, t);
+  radialLines(W / 2, 900, .4 + .6 * k, t, 'rgba(255,190,210,');
+  rival(W / 2, 1800, 2.9, t, { crouch: .8, blade: 1 });
+}
+function s5(t, lt) {                             // two impact frames, then crossing slashes
+  if (lt < .3) { const on = Math.floor(lt * 20) % 2 === 0; ctx.fillStyle = on ? '#fff' : '#000'; ctx.fillRect(0, 0, W, H);
+    radialLines(W / 2, H / 2, 1, t, on ? 'rgba(0,0,0,' : 'rgba(255,255,255,', 60);
+    ctx.save(); ctx.filter = on ? 'none' : 'invert(1)'; hero(W / 2, 1500, 2.4, t, { crouch: .4, blade: 1, lean: -.3, rim: on ? '#000' : '#fff' }); ctx.restore(); return; }
+  valley(t, 70, 26 * (1 - seg(lt, .3, 1.6)));
+  slash(-100, 1600, W + 100, 500, easeOut(seg(lt, .3, .5)), lerp(30, 0, seg(lt, .6, 1.8)));
+  slash(W + 100, 1600, -100, 500, easeOut(seg(lt, .55, .75)), lerp(30, 0, seg(lt, .85, 2)));
+  petals(t, 'rgba(255,170,200,.9)', 3);
+  hero(300, 1515, 1.15, t, { blade: 1, crouch: .4, rim: '#ffb35c' });
+  rival(560, 1512, 1.15, t, { blade: 1, crouch: .4 });
+}
+function s6(t, lt, noCap) {                             // reveal: the white scarf burns away, the red one is underneath
+  valley(t, 80); petals(t, 'rgba(255,170,200,.7)', 1);
+  camera(1 + seg(lt, 0, 2.8) * .25, 120, -120, 0, t);
+  const burn = seg(lt, .4, 1.6);
+  hero(280, 1515, 1.15, t, { blade: 1, rim: '#ffb35c' });
+  rival(580, 1512, 1.15, t, { blade: 1, scarf: burn < .5 ? WHITE : RED, rim: burn < .5 ? '#ffffff' : '#ffb35c' });
+  if (burn > 0 && burn < 1) {                    // embers flying off the scarf
+    const r = rng(Math.floor(t * 20)); ctx.fillStyle = 'rgba(255,170,80,.9)';
+    for (let i = 0; i < 30; i++) ctx.fillRect(580 + 40 + r() * 260, 1140 - r() * 220 - burn * 120, 5, 5);
+  }
+  if (noCap) return;
+  caption('SAME SCARF.', 1.6, lt, 360, RED, 104);
+  caption('SAME BLADE.', 2.2, lt, 500, '#F4F4F0', 104);
+}
+function s7(t, lt) {                             // vote card over the standoff, held so the loop restarts on the clash
+  s6(t, 2.8, true);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const k = easeOut(seg(lt, .1, .6));
+  ctx.save(); ctx.globalAlpha = k; ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(5,5,10,.72)'; ctx.fillRect(0, 210, W, 520);
+  ctx.font = '900 140px Inter, sans-serif'; ctx.fillStyle = '#F4F4F0'; ctx.fillText('AJENT21', W / 2, 380);
+  ctx.font = '700 40px "JetBrains Mono", monospace'; ctx.fillStyle = '#C8FF2E'; ctx.fillText('EPISODE 5  ·  THE MIRROR', W / 2, 460);
+  ctx.font = '900 64px Inter, sans-serif'; ctx.fillStyle = '#ffffff'; ctx.fillText('FRIEND OR FOE?', W / 2, 570);
+  ctx.font = '800 40px "JetBrains Mono", monospace'; ctx.fillStyle = '#ffb35c'; ctx.fillText('COMMENT  ALLY  OR  ENEMY', W / 2, 650);
+  ctx.restore();
+}
+const SHOTS = [[0, 1.6, s1], [1.6, 3.6, s2], [3.6, 6.0, s3], [6.0, 7.4, s4], [7.4, 9.8, s5], [9.8, 12.6, s6], [12.6, 16, s7]];
+window.DURATION = 16;
+window.draw = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+  const s = SHOTS.find(([a, b]) => t >= a && t < b) || SHOTS[SHOTS.length - 1];
+  ctx.save(); s[2](t, t - s[0]); ctx.restore();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const sinceCut = t - s[0]; if (s[0] > 0 && sinceCut < .08) flash(.45 * (1 - sinceCut / .08));
+  vignette(.5); grain(t); letterbox(t < 12.6 ? 1 : 1 - seg(t, 12.6, 13.1));
+  ctaPill(t, 6.4, 2.4, 'FOLLOW FOR EP.6 →');
+};
+</script></body></html>

@@ -1,0 +1,25 @@
+{
+  "duration": 26,
+  "pad": [82.41, 123.47, 164.81, 207.65, 246.94],
+  "pulse": {"start": 2.1, "end": 12.8, "bpm": 112, "hz": 49},
+  "hits": [
+    {"file": "space-intro-futuristic", "at": 0.0, "gain": 0.6},
+    {"file": "air-woosh-quick", "at": 1.6, "gain": 0.8},
+    {"file": "stomp-apocalyptic", "at": 2.1, "gain": 0.6},
+    {"file": "air-woosh-quick", "at": 3.2, "gain": 0.8},
+    {"file": "impact-cine-big", "at": 3.7, "gain": 0.6},
+    {"file": "air-woosh-quick", "at": 4.8, "gain": 0.7},
+    {"file": "bass-hit-futuristic", "at": 5.3, "gain": 0.6},
+    {"file": "air-woosh-quick", "at": 6.4, "gain": 0.7},
+    {"file": "bass-hit-futuristic", "at": 6.9, "gain": 0.6},
+    {"file": "stardust-swish", "at": 8.0, "gain": 0.6},
+    {"file": "sparkle-wand", "at": 9.6, "gain": 0.5},
+    {"file": "sparkle-wand", "at": 11.2, "gain": 0.5},
+    {"file": "impact-epic-trailer", "at": 12.8, "gain": 0.9},
+    {"file": "heartbeat-single", "at": 14.0, "gain": 0.8},
+    {"file": "heartbeat-single", "at": 14.9, "gain": 0.8},
+    {"file": "warp-slide", "at": 15.8, "gain": 0.7},
+    {"file": "light-aura", "at": 17.4, "gain": 0.7},
+    {"file": "air-whoosh-powerful", "at": 22.8, "gain": 0.5}
+  ]
+}

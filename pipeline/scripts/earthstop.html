@@ -1,0 +1,99 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="lib.js"></script>
+<script>
+// WHAT IF #1: Earth stops spinning for one second. Equator speed 1,670 km/h (465 m/s).
+const LIME = '#C8FF2E', INK = '#F4F4F0', MUTED = '#9A9A92', RED = '#ff5a4a';
+window.DURATION = 24;
+const STARS = (() => { const r = rng(21); return Array.from({ length: 260 }, () => ({ x: r() * W, y: r() * H, s: .6 + r() * 2 })); })();
+function space() { ctx.fillStyle = '#03040a'; ctx.fillRect(0, 0, W, H); ctx.fillStyle = '#fff'; STARS.forEach(s => { ctx.globalAlpha = .6; ctx.fillRect(s.x, s.y, s.s, s.s); }); ctx.globalAlpha = 1; }
+function txt(s, x, y, size, col, weight = 900, fam = '"Inter Display", Inter, sans-serif', a = 1) {
+  ctx.globalAlpha = a; ctx.fillStyle = col; ctx.font = `${weight} ${size}px ${fam}`; ctx.fillText(s, x, y); ctx.globalAlpha = 1;
+}
+function globe(cx, cy, R, rot, stopped) {
+  const g = ctx.createRadialGradient(cx - R * .35, cy - R * .35, R * .1, cx, cy, R); g.addColorStop(0, '#3fa0ff'); g.addColorStop(1, '#0b2a6b');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
+  const r = rng(5); ctx.fillStyle = '#3f9d58';                       // continents scroll with rotation
+  for (let i = 0; i < 9; i++) { const lon = r() * Math.PI * 2, lat = (r() - .5) * 1.6, w = .3 + r() * .5;
+    const a = lon + rot; const x = Math.sin(a) * Math.cos(lat) * R, z = Math.cos(a);
+    if (z > -.2) { ctx.globalAlpha = clamp(z + .3); ctx.beginPath(); ctx.ellipse(cx + x, cy + Math.sin(lat) * R, R * w * .35 * Math.max(.2, z), R * w * .25, 0, 0, Math.PI * 2); ctx.fill(); } }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 3;      // latitude lines
+  [0, .45, -.45].forEach(l => { ctx.beginPath(); ctx.ellipse(cx, cy + Math.sin(l) * R, R * Math.cos(l), R * .08, 0, 0, Math.PI * 2); ctx.stroke(); });
+  ctx.restore();
+  const atm = ctx.createRadialGradient(cx, cy, R * .95, cx, cy, R * 1.15); atm.addColorStop(0, 'rgba(120,190,255,.5)'); atm.addColorStop(1, 'rgba(120,190,255,0)');
+  ctx.fillStyle = atm; ctx.beginPath(); ctx.arc(cx, cy, R * 1.15, 0, Math.PI * 2); ctx.fill();
+  if (!stopped) { ctx.strokeStyle = LIME; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(cx, cy, R * 1.22, -2.5, -1.2); ctx.stroke();   // spin arrow
+    const a = -1.2; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * R * 1.22, cy + Math.sin(a) * R * 1.22); ctx.lineTo(cx + Math.cos(a - .12) * R * 1.32, cy + Math.sin(a - .12) * R * 1.32); ctx.lineTo(cx + Math.cos(a - .14) * R * 1.12, cy + Math.sin(a - .14) * R * 1.12); ctx.fillStyle = LIME; ctx.fill(); }
+}
+function speedTag(x, y, label, val, a) {
+  ctx.globalAlpha = a; ctx.fillStyle = 'rgba(5,6,12,.75)'; ctx.beginPath(); ctx.roundRect(x - 230, y - 56, 460, 92, 20); ctx.fill();
+  txt(label, x, y - 18, 30, MUTED, 700, '"JetBrains Mono", monospace', a); txt(val, x, y + 24, 44, LIME, 900, '"JetBrains Mono", monospace', a);
+}
+// things flying east once the ground stops
+const DEBRIS = (() => { const r = rng(33); return Array.from({ length: 26 }, () => ({ y: 980 + r() * 700, k: r(), s: .6 + r() * .8, kind: Math.floor(r() * 3) })); })();
+function silhouette(kind, x, y, s, rot) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s); ctx.fillStyle = '#06070c';
+  if (kind === 0) { ctx.beginPath(); ctx.arc(0, -70, 16, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(-12, -54, 24, 50); ctx.fillRect(-12, -4, 9, 40); ctx.fillRect(3, -4, 9, 40); }   // person
+  else if (kind === 1) { ctx.fillRect(-40, -40, 80, 50); ctx.beginPath(); ctx.moveTo(-48, -40); ctx.lineTo(0, -80); ctx.lineTo(48, -40); ctx.fill(); }   // house
+  else { ctx.fillRect(-6, -20, 12, 40); ctx.beginPath(); ctx.arc(0, -40, 34, 0, Math.PI * 2); ctx.fill(); }   // tree
+  ctx.restore();
+}
+
+window.draw = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.textAlign = 'center';
+  space();
+  if (t < 2.4) {                                   // hook question
+    globe(W / 2, 1180, 330, t * .8, false);
+    const k = easeOut(seg(t, .05, .45));
+    txt('WHAT IF EARTH', W / 2, 480, 96, INK, 900, undefined, k);
+    txt('STOPPED SPINNING', W / 2, 590, 96, INK, 900, undefined, k);
+    txt('FOR 1 SECOND?', W / 2, 720, 110, LIME, 900, undefined, k);
+  } else if (t < 9.6) {                            // how fast you are moving right now
+    const lt = t - 2.4;
+    globe(W / 2, 1060, 360, t * .8, false);
+    txt('Right now you are moving', W / 2, 330, 62, INK, 800, undefined, easeOut(seg(lt, 0, .4)));
+    txt('…even sitting still.', W / 2, 410, 48, MUTED, 600, undefined, easeOut(seg(lt, .5, .9)));
+    speedTag(W / 2, 1060 + 6, 'EQUATOR', '1,670 km/h', easeOut(seg(lt, 1, 1.4)));
+    speedTag(W / 2, 1060 - 210, 'NEW YORK', '1,266 km/h', easeOut(seg(lt, 2.4, 2.8)));
+    speedTag(W / 2, 1060 - 330, 'LONDON', '1,040 km/h', easeOut(seg(lt, 3.6, 4)));
+    txt('Faster than most pistol bullets.', W / 2, 1620, 54, LIME, 800, undefined, easeOut(seg(lt, 5, 5.4)));
+  } else if (t < 10.4) {                           // STOP
+    const lt = t - 9.6, on = Math.floor(lt * 16) % 2 === 0;
+    ctx.fillStyle = on ? '#fff' : '#000'; ctx.fillRect(0, 0, W, H);
+    txt('STOP.', W / 2, H / 2 + 60, 260, on ? '#000' : RED, 900);
+  } else if (t < 19.4) {                           // everything keeps moving east
+    const lt = t - 10.4;
+    camera(1, 0, 0, 28 * (1 - seg(lt, 0, 6)), t);
+    const sky = ctx.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#4a1a12'); sky.addColorStop(1, '#0a0606'); ctx.fillStyle = sky; ctx.fillRect(-100, -100, W + 200, H + 200);
+    hLines(t, .9, 'rgba(255,220,200,');
+    ctx.fillStyle = '#120a08'; ctx.fillRect(-100, 1720, W + 200, 400);   // ground (stopped)
+    DEBRIS.forEach((d, i) => { const x = ((d.k * W * 1.6 + lt * (700 + d.k * 900)) % (W + 400)) - 200; silhouette(d.kind, x, d.y, d.s, lt * (2 + d.k * 4)); });
+    const k1 = easeOut(seg(lt, .2, .6)), k2 = easeOut(seg(lt, 3, 3.4)), k3 = easeOut(seg(lt, 5.6, 6));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 230, W, 560);
+    txt('The ground stops.', W / 2, 330, 80, INK, 900, undefined, k1);
+    txt('You don\'t.', W / 2, 430, 100, RED, 900, undefined, k1);
+    txt('Winds of 1,670 km/h —', W / 2, 560, 56, INK, 800, undefined, k2);
+    txt('5× the strongest hurricane ever.', W / 2, 630, 50, LIME, 800, undefined, k2);
+    txt('Oceans keep moving too. 🌊', W / 2, 740, 56, INK, 800, undefined, k3);
+  } else {                                         // calm close, loops back to the spinning globe
+    const lt = t - 19.4;
+    globe(W / 2, 1180, 330, t * .8, false);
+    const k = easeOut(seg(lt, .1, .5));
+    txt('Good news:', W / 2, 520, 80, INK, 900, undefined, k);
+    txt('Earth can\'t just stop.', W / 2, 620, 80, LIME, 900, undefined, k);
+    txt('Its spin slows by ~2 ms per century.', W / 2, 720, 40, MUTED, 600, '"JetBrains Mono", monospace', easeOut(seg(lt, .8, 1.2)));
+    txt('AJENT21 · WHAT IF #1', W / 2, 1720, 38, INK, 800, '"JetBrains Mono", monospace', easeOut(seg(lt, 1.6, 2)));
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctaPill(t, 7.0, 2.4, 'FOLLOW FOR MORE WHAT IFs');
+  ctx.textAlign = 'left'; ctx.font = '700 30px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(244,244,240,.7)'; ctx.fillText('WHAT IF #1', 40, 70); ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(0, 0, W, 10); ctx.fillStyle = LIME; ctx.fillRect(0, 0, W * t / window.DURATION, 10);
+  vignette(.45); grain(t);
+};
+</script></body></html>

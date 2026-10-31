@@ -15,3 +15,7 @@
 | 01.11 21:00 | Tallest Things on Earth (SCALE #8) | локальная сессия, 30.10 |
 | 02.11 21:00 | All Planets Between Earth & Moon? (SCALE #9) | локальная сессия, 31.10 |
 | 02.11 23:30 | AJENT21 Ep.5 The Mirror (подходит к обоим вариантам Ep.4) | локальная сессия, 31.10 |
+| 01.11 04:30 | Your Life Is 0.07 Seconds (SCALE #9, продолжение лучшего) | облачная сессия, 31.10 |
+| 01.11 06:30 | What If Earth Stopped Spinning (WHAT IF #1) | облачная сессия, 31.10 |
+
+С 31.10 — 4 слота в день: 04:30, 06:30, 21:00, 23:30 KZ (см. GROWTH_PLAN.md).

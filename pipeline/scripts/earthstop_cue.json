@@ -1,0 +1,5 @@
+{"duration": 24, "bpm": 128, "key": "D",
+ "sections": [{"type": "ambient", "start": 0, "end": 7.0}, {"type": "tension", "start": 7.0, "end": 9.6}, {"type": "drop", "start": 10.4, "end": 19.4}, {"type": "outro", "start": 19.4, "end": 24}],
+ "hits": [{"type": "whoosh", "at": 0.0, "len": 1.0}, {"type": "shing", "at": 3.4, "gain": 0.6}, {"type": "shing", "at": 4.8, "gain": 0.6}, {"type": "shing", "at": 6.0, "gain": 0.6},
+  {"type": "riser", "at": 7.6, "len": 2.0}, {"type": "impact", "at": 9.6, "len": 2.8, "gain": 1.2}, {"type": "whoosh", "at": 10.6, "len": 1.2}, {"type": "whoosh", "at": 12.2, "len": 1.2},
+  {"type": "boom", "at": 13.4}, {"type": "whoosh", "at": 15.0, "len": 1.2}, {"type": "boom", "at": 16.0}, {"type": "swell", "at": 19.5, "len": 2.0, "gain": 0.6}]}

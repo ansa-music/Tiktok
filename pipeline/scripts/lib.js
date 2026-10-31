@@ -59,7 +59,7 @@ function hero(x, y, s, t, o = {}) {
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.rotate(lean);
   const h = 1 - crouch * .25;
   // scarf
-  ctx.strokeStyle = '#e8263e'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath();
+  ctx.strokeStyle = o.scarf || '#e8263e'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath();
   ctx.moveTo(0, -300 * h);
   for (let i = 1; i <= 8; i++) ctx.lineTo(-i * 34, -300 * h + Math.sin(t * 9 + i * .8) * (6 + i * 3) + i * 4);
   ctx.stroke();

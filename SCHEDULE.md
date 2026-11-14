@@ -19,3 +19,5 @@
 | 01.11 06:30 | What If Earth Stopped Spinning (WHAT IF #1) | облачная сессия, 31.10 |
 
 С 31.10 — 4 слота в день: 04:30, 06:30, 21:00, 23:30 KZ (см. GROWTH_PLAN.md).
+| 14.11 21:00 | What If Earth Stopped Spinning (WHAT IF #1) | облачная сессия, 14.11 |
+| 15.11 21:00 | Earth's History in One Year (SCALE #10) | облачная сессия, 14.11 |

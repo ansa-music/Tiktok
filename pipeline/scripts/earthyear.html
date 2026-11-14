@@ -1,0 +1,77 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="lib.js"></script>
+<script>
+// SCALE #10: Earth's 4.54-billion-year history squeezed into one calendar year.
+const LIME = '#C8FF2E', INK = '#F4F4F0', MUTED = '#9A9A92';
+// [date label, time label, event, years ago text, emoji, fraction of year elapsed]
+const EV = [
+  ['MAR 1', '', 'First life appears', '3.8 billion years ago', '🦠', 59/365],
+  ['NOV 18', '', 'Animal life explodes', '538 million years ago', '🐚', 322/365],
+  ['NOV 24', '', 'Plants reach land', '470 million years ago', '🌿', 328/365],
+  ['DEC 13', '', 'Dinosaurs appear', '230 million years ago', '🦖', 347/365],
+  ['DEC 26', '', 'Asteroid. Dinosaurs gone.', '66 million years ago', '☄️', 360/365],
+  ['DEC 31', '11:25 PM', 'Homo sapiens appears', '300,000 years ago', '🧍', 0.99995],
+  ['DEC 31', '11:59:28 PM', 'The pyramids', '4,600 years ago', '🔺', 0.99999],
+];
+const T0 = 2.4, SEG = 2.3;
+window.DURATION = T0 + SEG * EV.length + 5.4;
+const STARS = (() => { const r = rng(12); return Array.from({ length: 300 }, () => ({ x: r() * W, y: r() * H, z: .2 + r() * .8, p: r() * 6 })); })();
+function space(t) {
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#04030a'); g.addColorStop(1, '#120a16');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  STARS.forEach(s => { ctx.globalAlpha = s.z * (.5 + .5 * Math.sin(t * 2 + s.p)); ctx.fillStyle = '#fff'; ctx.fillRect((s.x + t * 6 * s.z) % W, s.y, 2.2 * s.z, 2.2 * s.z); });
+  ctx.globalAlpha = 1;
+}
+function txt(s, x, y, size, col, weight = 900, fam = '"Inter Display", Inter, sans-serif', a = 1) {
+  ctx.globalAlpha = a; ctx.fillStyle = col; ctx.font = `${weight} ${size}px ${fam}`; ctx.fillText(s, x, y); ctx.globalAlpha = 1;
+}
+function emoji(e, x, y, size, a) { ctx.globalAlpha = a; ctx.font = `${size}px "Noto Color Emoji"`; ctx.fillText(e, x, y); ctx.globalAlpha = 1; }
+function bar(frac) {                                   // the last day as a bar, filling to midnight
+  const x0 = 90, x1 = W - 90, y = 1500;
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(x0, y, x1 - x0, 26);
+  ctx.fillStyle = LIME; ctx.fillRect(x0, y, (x1 - x0) * frac, 26);
+  ctx.font = '600 30px "JetBrains Mono", monospace'; ctx.fillStyle = MUTED;
+  ctx.textAlign = 'left'; ctx.fillText('JAN 1', x0, y + 70); ctx.textAlign = 'right'; ctx.fillText('DEC 31', x1, y + 70); ctx.textAlign = 'center';
+}
+
+window.draw = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.textAlign = 'center';
+  space(t);
+  if (t < T0) {                                       // hook: the punchline as a question
+    const k = easeOut(seg(t, .05, .45));
+    txt("IF EARTH'S HISTORY", W / 2, 640, 100, INK, 900, undefined, k);
+    txt('WAS ONE YEAR…', W / 2, 760, 100, INK, 900, undefined, k);
+    txt('WHEN DID WE SHOW UP?', W / 2, 900, 84, LIME, 900, undefined, k);
+    txt('4.54 billion years → 365 days', W / 2, 1010, 44, MUTED, 500, '"JetBrains Mono", monospace', easeOut(seg(t, .7, 1.1)));
+  } else if (t < T0 + SEG * EV.length) {
+    const i = Math.floor((t - T0) / SEG), lt = t - T0 - i * SEG, ev = EV[i];
+    bar(ev[5]);
+    const k = easeOut(seg(lt, 0, .35));
+    ctx.save(); ctx.translate(W / 2, 470); const sc = .85 + .15 * k; ctx.scale(sc, sc);
+    txt(ev[0], 0, 0, 160, LIME, 900, undefined, k);
+    if (ev[1]) txt(ev[1], 0, 90, 64, LIME, 800, '"JetBrains Mono", monospace', k);
+    ctx.restore();
+    txt(ev[2], W / 2, 680, 64, INK, 800, undefined, k);
+    txt(ev[3], W / 2, 750, 40, MUTED, 600, '"JetBrains Mono", monospace', k);
+    emoji(ev[4], W / 2, 1150, 200, k);
+    flash(.3 * clamp(1 - lt * 5));
+  } else {                                            // payoff: a human life in the last blink
+    const lt = t - T0 - SEG * EV.length;
+    bar(1);
+    const k = easeOut(seg(lt, .1, .5)), k2 = easeOut(seg(lt, 1.2, 1.7));
+    txt('HUMANS HAVE EXISTED', W / 2, 560, 84, INK, 900, undefined, k);
+    txt('FOR JUST 35 MINUTES', W / 2, 670, 84, LIME, 900, undefined, k);
+    txt('of Dec 31. Dinosaurs ruled for 13 days.', W / 2, 780, 48, MUTED, 600, undefined, k2);
+    txt('AJENT21 · SCALE #10', W / 2, 1720, 38, INK, 800, '"JetBrains Mono", monospace', easeOut(seg(lt, 2.4, 2.8)));
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctaPill(t, 8.6, 2.6, 'FOLLOW · NEW SCALE DAILY');
+  ctx.textAlign = 'left'; ctx.font = '700 30px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(244,244,240,.7)'; ctx.fillText('SCALE #10', 40, 70); ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(0, 0, W, 10); ctx.fillStyle = LIME; ctx.fillRect(0, 0, W * t / window.DURATION, 10);
+  vignette(.45); grain(t);
+};
+</script></body></html>

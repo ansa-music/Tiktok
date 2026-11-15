@@ -1,0 +1,79 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="lib.js"></script>
+<script>
+// SCALE #18: How far is the storm
+const LIME = '#C8FF2E', INK = '#F4F4F0', MUTED = '#9A9A92';
+const EV = [
+  ["299,792 km/s", "LIGHT", "the flash reaches you", "practically instantly", "⚡", 0.25],
+  ["343 m/s", "SOUND", "the thunder crawls behind", "at 20°C", "🔊", 0.5],
+  ["3 SECONDS", "≈ 1 KM", "count after the flash", "3 s of delay ≈ 1 km", "⏱️", 0.75],
+  ["30 SECONDS", "≈ 10 KM", "still close enough to be struck", "when thunder roars, go indoors", "🏠", 1.0],
+];
+const T0 = 2.4, SEG = 2.6;
+window.DURATION = T0 + SEG * EV.length + 4.6;
+function fit(s, x, y, size, col, weight, fam, a, maxW) {   // shrink text until it fits the frame
+  fam = fam || '"Inter Display", Inter, sans-serif'; maxW = maxW || 980;
+  ctx.font = `${weight} ${size}px ${fam}`;
+  while (size > 24 && ctx.measureText(s).width > maxW) { size -= 4; ctx.font = `${weight} ${size}px ${fam}`; }
+  txt(s, x, y, size, col, weight, fam, a);
+}
+const STARS = (() => { const r = rng(12); return Array.from({ length: 300 }, () => ({ x: r() * W, y: r() * H, z: .2 + r() * .8, p: r() * 6 })); })();
+function space(t) {
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#04030a'); g.addColorStop(1, '#120a16');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  STARS.forEach(s => { ctx.globalAlpha = s.z * (.5 + .5 * Math.sin(t * 2 + s.p)); ctx.fillStyle = '#fff'; ctx.fillRect((s.x + t * 6 * s.z) % W, s.y, 2.2 * s.z, 2.2 * s.z); });
+  ctx.globalAlpha = 1;
+}
+function txt(s, x, y, size, col, weight = 900, fam = '"Inter Display", Inter, sans-serif', a = 1) {
+  ctx.globalAlpha = a; ctx.fillStyle = col; ctx.font = `${weight} ${size}px ${fam}`; ctx.fillText(s, x, y); ctx.globalAlpha = 1;
+}
+function emoji(e, x, y, size, a) { ctx.globalAlpha = a; ctx.font = `${size}px "Noto Color Emoji"`; ctx.fillText(e, x, y); ctx.globalAlpha = 1; }
+function bar(frac) {                                   // the last day as a bar, filling to midnight
+  const x0 = 90, x1 = W - 90, y = 1500;
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(x0, y, x1 - x0, 26);
+  ctx.fillStyle = LIME; ctx.fillRect(x0, y, (x1 - x0) * frac, 26);
+  ctx.font = '600 30px "JetBrains Mono", monospace'; ctx.fillStyle = MUTED;
+  ctx.textAlign = 'left'; ctx.fillText("", x0, y + 70); ctx.textAlign = 'right'; ctx.fillText("", x1, y + 70); ctx.textAlign = 'center';
+}
+
+window.draw = function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.textAlign = 'center';
+  space(t);
+  if (t < T0) {                                       // hook: the punchline as a question
+    const k = easeOut(seg(t, .05, .45));
+    fit("HOW FAR AWAY", W / 2, 640, 110, INK, 900, undefined, k);
+    fit("IS THAT STORM?", W / 2, 760, 110, INK, 900, undefined, k);
+    fit("⚡ count the seconds", W / 2, 900, 84, LIME, 900, undefined, k);
+    fit("flash → boom", W / 2, 1010, 44, MUTED, 500, '"JetBrains Mono", monospace', easeOut(seg(t, .7, 1.1)));
+  } else if (t < T0 + SEG * EV.length) {
+    const i = Math.floor((t - T0) / SEG), lt = t - T0 - i * SEG, ev = EV[i];
+    bar(ev[5]);
+    const k = easeOut(seg(lt, 0, .35));
+    ctx.save(); ctx.translate(W / 2, 470); const sc = .85 + .15 * k; ctx.scale(sc, sc);
+    fit(ev[0], 0, 0, 180, LIME, 900, undefined, k);
+    fit(ev[1], 0, 90, 64, LIME, 800, '"JetBrains Mono", monospace', k);
+    ctx.restore();
+    fit(ev[2], W / 2, 680, 64, INK, 800, undefined, k);
+    fit(ev[3], W / 2, 750, 40, MUTED, 600, '"JetBrains Mono", monospace', k);
+    emoji(ev[4], W / 2, 1150, 200, k);
+    flash(.3 * clamp(1 - lt * 5));
+  } else {                                            // payoff: a human life in the last blink
+    const lt = t - T0 - SEG * EV.length;
+    bar(1);
+    const k = easeOut(seg(lt, .1, .5)), k2 = easeOut(seg(lt, 1.2, 1.7));
+    fit("Hear thunder?", W / 2, 560, 70, INK, 800, undefined, k);
+    fit("YOU'RE IN RANGE.", W / 2, 680, 120, LIME, 900, undefined, k);
+    fit("Lightning can strike ~16 km from a storm.", W / 2, 790, 46, MUTED, 600, undefined, k2);
+    txt('AJENT21 · SCALE #18', W / 2, 1720, 38, INK, 800, '"JetBrains Mono", monospace', easeOut(seg(lt, 2.4, 2.8)));
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctaPill(t, 8.6, 2.6, 'FOLLOW · NEW SCALE DAILY');
+  ctx.textAlign = 'left'; ctx.font = '700 30px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(244,244,240,.7)'; ctx.fillText("SCALE #18", 40, 70); ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(0, 0, W, 10); ctx.fillStyle = LIME; ctx.fillRect(0, 0, W * t / window.DURATION, 10);
+  vignette(.45); grain(t);
+};
+</script></body></html>

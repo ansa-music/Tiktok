@@ -15,7 +15,7 @@ for id in $(python3 -c "import json,sys;[print(s['id']) for s in json.load(open(
   rm -rf frames/$id
   (cd .. && git add -A && git -c user.name="Claude" -c user.email="noreply@anthropic.com" commit -qm "Add $id short
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01Hc2BmSX9HNdP12dAdhyfzd" && git push -q origin ajent21-media 2>&1 | grep -v "moved\|location" || true)
   echo "built $id"; done=$((done+1))
 done
